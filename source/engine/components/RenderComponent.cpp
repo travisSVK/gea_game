@@ -1,26 +1,45 @@
 #include "RenderComponent.hpp"
 
-RenderComponent::RenderComponent(EntityManager::Entity entity, double positionX, double positionY) :
-    m_entity(entity), m_spritePositionX(positionX), m_spritePositionY(positionY)
-{}
+void RenderComponent::Create(EntityManager::Entity entity, const glm::dvec2& position, MovementType movement)
+{
+    m_entity = entity;
+    m_spritePosition = position;
+    m_enabled = true;
+    m_movement = movement;
+}
 
 EntityManager::Entity RenderComponent::GetEntity()
 {
     return m_entity;
 }
 
-void RenderComponent::SetPosition(double positionX, double positionY)
+void RenderComponent::SetPosition(const glm::dvec2& position)
 {
-    m_spritePositionX = positionX;
-    m_spritePositionY = positionY;
+    m_lastSpritePosition = m_spritePosition;
+    m_spritePosition += position;
 }
 
-double RenderComponent::GetSpritePositionX()
+glm::dvec2 RenderComponent::GetSpritePosition()
 {
-    return m_spritePositionX;
+    return m_spritePosition;
 }
 
-double RenderComponent::GetSpritePositionY()
+MovementType RenderComponent::GetMovementType()
 {
-    return m_spritePositionY;
+    return m_movement;
+}
+
+void RenderComponent::Enable()
+{
+    m_enabled = true;
+}
+
+void RenderComponent::Disable()
+{
+    m_enabled = false;
+}
+
+bool RenderComponent::IsEnabled()
+{
+    return m_enabled;
 }

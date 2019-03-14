@@ -7,6 +7,10 @@ end
 function include_glm()
     includedirs "external/GLM/include/"
 end
+
+function include_nlhomann()
+    includedirs "external/nlhomann/include/"
+end
     
 function includeSDL()
     includedirs "external/SDL/Include"
@@ -16,6 +20,17 @@ function linkSDL()
     libdirs "external/SDL/Lib/Win64/"
     filter "kind:not StaticLib"
         links { "SDL2", "SDL2main" }
+    filter {}
+end
+
+function includeMixer()
+    includedirs "external/SDLmixer/include"
+end
+
+function linkMixer()
+    libdirs "external/SDLmixer/lib/x64/"
+    filter "kind:not StaticLib"
+        links { "SDL2_mixer"}
     filter {}
 end
 
@@ -88,6 +103,25 @@ workspace "GEAEngine"
         os.copyfile("external/SDLimage/lib/x64/libwebp-7.dll", "Builds/Release/libwebp-7.dll")
         os.copyfile("external/SDLimage/lib/x64/SDL2_image.dll", "Builds/Debug/SDL2_image.dll")
         os.copyfile("external/SDLimage/lib/x64/SDL2_image.dll", "Builds/Release/SDL2_image.dll")
+        -- SDL mixer
+        os.copyfile("external/SDLmixer/lib/x64/SDL2_mixer.dll", "Builds/Debug/SDL2_mixer.dll")
+        os.copyfile("external/SDLmixer/lib/x64/SDL2_mixer.dll", "Builds/Release/SDL2_mixer.dll")
+        os.copyfile("external/SDLmixer/lib/x64/libFLAC-8.dll", "Builds/Debug/libFLAC-8.dll")
+        os.copyfile("external/SDLmixer/lib/x64/libFLAC-8.dll", "Builds/Release/libFLAC-8.dll")
+        os.copyfile("external/SDLmixer/lib/x64/libmodplug-1.dll", "Builds/Debug/libmodplug-1.dll")
+        os.copyfile("external/SDLmixer/lib/x64/libmodplug-1.dll", "Builds/Release/libmodplug-1.dll")
+        os.copyfile("external/SDLmixer/lib/x64/libmpg123-0.dll", "Builds/Debug/libmpg123-0.dll")
+        os.copyfile("external/SDLmixer/lib/x64/libmpg123-0.dll", "Builds/Release/libmpg123-0.dll")
+        os.copyfile("external/SDLmixer/lib/x64/libogg-0.dll", "Builds/Debug/libogg-0.dll")
+        os.copyfile("external/SDLmixer/lib/x64/libogg-0.dll", "Builds/Release/libogg-0.dll")
+        os.copyfile("external/SDLmixer/lib/x64/libopus-0.dll", "Builds/Debug/libopus-0.dll")
+        os.copyfile("external/SDLmixer/lib/x64/libopus-0.dll", "Builds/Release/libopus-0.dll")
+        os.copyfile("external/SDLmixer/lib/x64/libopusfile-0.dll", "Builds/Debug/libopusfile-0.dll")
+        os.copyfile("external/SDLmixer/lib/x64/libopusfile-0.dll", "Builds/Release/libopusfile-0.dll")
+        os.copyfile("external/SDLmixer/lib/x64/libvorbis-0.dll", "Builds/Debug/libvorbis-0.dll")
+        os.copyfile("external/SDLmixer/lib/x64/libvorbis-0.dll", "Builds/Release/libvorbis-0.dll")
+        os.copyfile("external/SDLmixer/lib/x64/libvorbisfile-3.dll", "Builds/Debug/libvorbisfile-3.dll")
+        os.copyfile("external/SDLmixer/lib/x64/libvorbisfile-3.dll", "Builds/Release/libvorbisfile-3.dll")
         
     filter {}
 
@@ -105,6 +139,9 @@ project "engine"
     includeSDLimage()
     linkSDLimage()
     include_glm()
+    include_nlhomann()
+    includeMixer()
+    linkMixer()
 
 function use_engine()
     includedirs "source/engine"
@@ -117,8 +154,9 @@ function use_engine()
     linkSDL()
     includeTTF()
     linkTTF()
-    includeSDLimage()
-    linkSDLimage()
+    include_glm()
+    includeMixer()
+    linkMixer()
 end
 
 project "game"

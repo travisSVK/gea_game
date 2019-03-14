@@ -1,49 +1,73 @@
 #pragma once
 #include "systems/System.hpp"
+#include "managers/EntityManager.hpp"
+#include "LevelNumbers.hpp"
 #include "SDL_ttf.h"
 #include <unordered_map>
-#include "systems/System.hpp"
+#include "SDL_mixer.h"
 
+class RenderSystem;
+class CollisionSystem;
+class MovementSystem;
+class InputSystem;
+class CameraSystem;
 class GameSystem : public System
 {
 public:
-
-    struct KeyStatus
-    {
-        bool fire; // space
-        bool left; // left arrow
-        bool right; // right arrow
-        bool esc; // escape button
-    };
 
     GameSystem();
     bool Init(int width, int height);
     void Create();
     void Draw();
-    void Update(float delta);
+    void Update();
     void Destroy();
     float GetElapsedTime();
     bool GameOver();
 
+protected:
+    void CreateLevel(RenderSystem* renderSystem, CollisionSystem* collisionSystem, MovementSystem* movementSystem, InputSystem* inputSystem, CameraSystem* cameraSystem);
+    virtual void DisableComponents(int excludeEntity);
+
 private:
     
-    // receive event from another system
     void Receive(Event* event);
-    void ProcessInput();
     void DrawText(int x, int y, const char * msg);
     void SwapBuffers();
     void ClearWindow();
+    void DrawHUD();
+    void RestartLevel();
 
 private:
 
     SDL_Window* m_window;
     SDL_Renderer* m_renderer;
-    TTF_Font* font;
+    TTF_Font* m_font;
     EntityManager* m_entityManager;
     std::vector<System*> m_systems;
-
+    std::unordered_map<SystemType, System*> m_systemsMap;
+    LevelNumbers m_levelNumbers;
     EntityManager::Entity m_playerEntity;
-    KeyStatus key;
-    bool m_playerMoving;
+    EntityManager::Entity m_carEntity;
+    EntityManager::Entity m_gameEntity;
+    Mix_Music* m_backgroundMusic;
+    Mix_Chunk* m_shoot;
+    Mix_Chunk* m_hit;
+    Mix_Chunk* m_failed;
+    Mix_Chunk* m_car;
+    unsigned int m_playerScore;
+    bool m_levelOver;
+    bool m_levelFinished;
+    bool m_drawScore;
     bool m_gameOver;
+    bool m_gameStart;
+    unsigned int m_playerLives;
+    float m_playerHorizontalPosition;
+    SDL_Texture* m_hudTexture;
+    SDL_Texture* m_hudLives;
+
+    //performance test
+    unsigned int m_counterRender;
+    double m_elapsedRender;
+    unsigned int m_counterCollision;
+    double m_elapsedCollision;
 };

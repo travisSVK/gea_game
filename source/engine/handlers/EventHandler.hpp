@@ -1,6 +1,6 @@
 #pragma once
 #include "../common/Enums.hpp"
-#include "../EntityManager.hpp"
+#include "../managers/EntityManager.hpp"
 #include "../common/Event.hpp"
 #include <unordered_map>
 #include <functional>
@@ -19,7 +19,10 @@ public:
 
     void HandleEvent(System* system, const std::unordered_map<EntityManager::Entity, Component*>& componentMap, Event* event)
     {
-        m_EventHandlers[event->m_type](system, componentMap, event);
+        if (m_EventHandlers.find(event->m_type) != m_EventHandlers.end())
+        {
+            m_EventHandlers[event->m_type](system, componentMap, event);
+        }
     }
 
 private:

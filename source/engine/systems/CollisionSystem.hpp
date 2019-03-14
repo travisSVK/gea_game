@@ -1,28 +1,29 @@
 #pragma once
+#include "../EngineAPI.hpp"
 #include "System.hpp"
 #include "../handlers/EventHandler.hpp"
 #include "../managers/EntityManager.hpp"
 
-class MovementComponent;
-class ENGINE_API MovementSystem : public System
+class CollisionComponent;
+class ENGINE_API CollisionSystem : public System
 {
 public:
 
-    MovementSystem(EventHandler<MovementSystem, MovementComponent>* eventHandler);
+    CollisionSystem(EventHandler<CollisionSystem, CollisionComponent>* eventHandler);
     virtual void Update() override;
     virtual void Destroy() override;
     void Receive(Event* event);
 
     template<typename ...Params>
-    void RegisterComponent(ComponentType componentType, std::function<MovementComponent*(MovementComponent*, Params...)> constructor)
+    void RegisterComponent(ComponentType componentType, std::function<CollisionComponent*(CollisionComponent*, Params...)> constructor)
     {
-        m_baseConstructors[componentType] = new BaseConstructor<MovementComponent, Params...>(constructor);
+        m_baseConstructors[componentType] = new BaseConstructor<CollisionComponent, Params...>(constructor);
     }
 
     template<typename ...Params>
     void CreateComponent(ComponentType componentType, Params&&... params)
     {
-        MovementComponent* newComponent = nullptr;
+        CollisionComponent* newComponent = nullptr;
         bool isNew = true;
         for (auto component : m_components)
         {
@@ -34,14 +35,14 @@ public:
                 break;
             }
         }
-        /*if (m_disabledComponents[componentType].size() > 0)
+       /* if (m_disabledComponents[componentType].size() > 0)
         {
             newComponent = m_disabledComponents[componentType].front();
             m_disabledComponents[componentType].erase(m_disabledComponents[componentType].begin());
             m_componentLookUp.erase(newComponent->GetEntity());
             isNew = false;
         }*/
-        MovementComponent* component = m_baseConstructors[componentType]->Construct<BaseConstructor<MovementComponent, Params...>>(newComponent, std::forward<Params>(params)...);
+        CollisionComponent* component = m_baseConstructors[componentType]->Construct<BaseConstructor<CollisionComponent, Params...>>(newComponent, std::forward<Params>(params)...);
         if (component)
         {
             if (isNew)
@@ -58,11 +59,11 @@ protected:
 
 private:
 
-    std::vector<MovementComponent*> m_components;
-    std::unordered_map<ComponentType, std::vector<MovementComponent*>> m_disabledComponents;
-    std::unordered_map<EntityManager::Entity, MovementComponent*> m_componentLookUp;
-    EventHandler<MovementSystem, MovementComponent>* m_eventHandler;
-    std::unordered_map<ComponentType, IBaseConstructor<MovementComponent>*> m_baseConstructors;
+    std::vector<CollisionComponent*> m_components;
+    std::unordered_map<ComponentType, std::vector<CollisionComponent*>> m_disabledComponents;
+    std::unordered_map<EntityManager::Entity, CollisionComponent*> m_componentLookUp;
+    EventHandler<CollisionSystem, CollisionComponent>* m_eventHandler;
+    std::unordered_map<ComponentType, IBaseConstructor<CollisionComponent>*> m_baseConstructors;
     unsigned int m_counter;
     double m_elapsed;
 };

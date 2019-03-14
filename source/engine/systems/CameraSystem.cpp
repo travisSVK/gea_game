@@ -1,32 +1,23 @@
-#include "RenderSystem.hpp"
+#include "CameraSystem.hpp"
 #include "../common/Event.hpp"
-#include "../components/RenderComponent.hpp"
-#include "../managers/RenderManager.hpp"
-#include <chrono>
+#include "../components/CameraComponent.hpp"
 #include <iostream>
+#include <chrono>
 
-RenderSystem::RenderSystem(EventHandler<RenderSystem, RenderComponent>* eventHandler) : m_eventHandler(eventHandler), System()
+CameraSystem::CameraSystem(EventHandler<CameraSystem, CameraComponent>* eventHandler) : m_eventHandler(eventHandler)
 {
-    m_components.reserve(1000);
-    m_componentLookUp.reserve(1000);
-    //m_disabledComponents.reserve(100);
+    m_components.reserve(2);
+    m_componentLookUp.reserve(2);
     m_counter = 0;
     m_elapsed = 0.0;
 }
 
-void RenderSystem::Update()
+void CameraSystem::Update()
 {
     /*m_counter++;
     auto start = std::chrono::high_resolution_clock::now();*/
     if (m_enabled)
     {
-        for (auto component : m_staticComponents)
-        {
-            if (component->IsEnabled())
-            {
-                component->Update();
-            }
-        }
         for (auto component : m_components)
         {
             if (component->IsEnabled())
@@ -40,7 +31,7 @@ void RenderSystem::Update()
                     //delete event;
                 }
             }
-            /*if (!component->IsEnabled())
+            /*if(!component->IsEnabled())
             {
                 bool isDisabled = false;
                 for (auto disabledComponent : m_disabledComponents[component->GetComponentType()])
@@ -57,51 +48,29 @@ void RenderSystem::Update()
                 }
             }*/
         }
-    }
+    }   
     //auto finish = std::chrono::high_resolution_clock::now();
     //std::chrono::duration<double> elapsed = finish - start;
     //m_elapsed += elapsed.count();
     //if (m_counter == 100)
     //{
-    //    //std::cout << "RenderSystem: " << m_elapsed << std::endl;
+    //    //std::cout << "CameraSystem: " << m_elapsed << std::endl;
     //    m_elapsed = 0;
     //    m_counter = 0;
     //}
+    
 }
 
-void RenderSystem::Receive(Event* event)
+void CameraSystem::Receive(Event* event)
 {
-    /*m_counter++;
-    auto start = std::chrono::high_resolution_clock::now();*/
     if (m_enabled)
     {
         m_eventHandler->HandleEvent(this, m_componentLookUp, event);
     }
-    /*auto finish = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed = finish - start;
-    m_elapsed += elapsed.count();
-    if (m_counter == 6300)
-    {
-        std::cout << "RenderSystem: " << m_elapsed << std::endl;
-        m_elapsed = 0;
-        m_counter = 0;
-    }*/
 }
 
-void RenderSystem::DisableComponents(int excludeEntity)
+void CameraSystem::DisableComponents(int excludeEntity)
 {
-    for (auto component : m_staticComponents)
-    {
-        if ((component->GetEntity() != excludeEntity) && (component->IsEnabled()))
-        {
-            component->Disable();
-            //m_disabledComponents[component->GetComponentType()].push_back(component);
-        }
-        else
-        {
-            m_enabled = true;
-        }
-    }
     for (auto component : m_components)
     {
         if ((component->GetEntity() != excludeEntity) && (component->IsEnabled()))
@@ -116,14 +85,13 @@ void RenderSystem::DisableComponents(int excludeEntity)
     }
 }
 
-void RenderSystem::Destroy()
+void CameraSystem::Destroy()
 {
     for (auto component : m_components)
     {
         component->Destroy();
         delete component;
     }
-    RenderManager::DestroyTextures();
     for (const auto& constructor : m_baseConstructors)
     {
         delete constructor.second;

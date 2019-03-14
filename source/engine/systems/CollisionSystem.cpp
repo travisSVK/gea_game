@@ -1,38 +1,36 @@
-#include "RenderSystem.hpp"
+#include "CollisionSystem.hpp"
 #include "../common/Event.hpp"
-#include "../components/RenderComponent.hpp"
-#include "../managers/RenderManager.hpp"
+#include "../components/CollisionComponent.hpp"
+#include <algorithm>
 #include <chrono>
 #include <iostream>
 
-RenderSystem::RenderSystem(EventHandler<RenderSystem, RenderComponent>* eventHandler) : m_eventHandler(eventHandler), System()
+CollisionSystem::CollisionSystem(EventHandler<CollisionSystem, CollisionComponent>* eventHandler) : m_eventHandler(eventHandler)
 {
     m_components.reserve(1000);
     m_componentLookUp.reserve(1000);
-    //m_disabledComponents.reserve(100);
     m_counter = 0;
     m_elapsed = 0.0;
 }
 
-void RenderSystem::Update()
+void CollisionSystem::Update()
 {
     /*m_counter++;
     auto start = std::chrono::high_resolution_clock::now();*/
     if (m_enabled)
     {
-        for (auto component : m_staticComponents)
+        std::vector<CollisionComponent *> components;
+        components.reserve(m_components.size());
+        std::copy_if(m_components.begin(), m_components.end(), std::back_inserter(components), [](auto& collisionComponent) {return collisionComponent->IsEnabled(); });
+        auto componentsSize = components.size();
+        for (int i = componentsSize - 1; i >= 0; --i)
         {
+            CollisionComponent* component = components.back();
+            components.pop_back();
             if (component->IsEnabled())
             {
-                component->Update();
-            }
-        }
-        for (auto component : m_components)
-        {
-            if (component->IsEnabled())
-            {
-                Event* event = component->Update();
-                if (event)
+                std::vector<Event*> events = component->Update(components);
+                for (auto event : events)
                 {
                     event->m_entity = component->GetEntity();
                     Notify(event);
@@ -63,45 +61,22 @@ void RenderSystem::Update()
     //m_elapsed += elapsed.count();
     //if (m_counter == 100)
     //{
-    //    //std::cout << "RenderSystem: " << m_elapsed << std::endl;
+    //    //std::cout << "CollisionSystem: " << m_elapsed << std::endl;
     //    m_elapsed = 0;
     //    m_counter = 0;
     //}
 }
 
-void RenderSystem::Receive(Event* event)
+void CollisionSystem::Receive(Event* event)
 {
-    /*m_counter++;
-    auto start = std::chrono::high_resolution_clock::now();*/
     if (m_enabled)
     {
         m_eventHandler->HandleEvent(this, m_componentLookUp, event);
     }
-    /*auto finish = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed = finish - start;
-    m_elapsed += elapsed.count();
-    if (m_counter == 6300)
-    {
-        std::cout << "RenderSystem: " << m_elapsed << std::endl;
-        m_elapsed = 0;
-        m_counter = 0;
-    }*/
 }
 
-void RenderSystem::DisableComponents(int excludeEntity)
+void CollisionSystem::DisableComponents(int excludeEntity)
 {
-    for (auto component : m_staticComponents)
-    {
-        if ((component->GetEntity() != excludeEntity) && (component->IsEnabled()))
-        {
-            component->Disable();
-            //m_disabledComponents[component->GetComponentType()].push_back(component);
-        }
-        else
-        {
-            m_enabled = true;
-        }
-    }
     for (auto component : m_components)
     {
         if ((component->GetEntity() != excludeEntity) && (component->IsEnabled()))
@@ -116,14 +91,13 @@ void RenderSystem::DisableComponents(int excludeEntity)
     }
 }
 
-void RenderSystem::Destroy()
+void CollisionSystem::Destroy()
 {
     for (auto component : m_components)
     {
         component->Destroy();
         delete component;
     }
-    RenderManager::DestroyTextures();
     for (const auto& constructor : m_baseConstructors)
     {
         delete constructor.second;

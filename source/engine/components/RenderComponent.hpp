@@ -1,25 +1,32 @@
 #pragma once
 #include "../EngineAPI.hpp"
-#include "../EntityManager.hpp"
+#include "../managers/EntityManager.hpp"
 #include "../common/Enums.hpp"
+#include "GLM/glm.hpp"
 
-class Message;
+class Event;
 class ENGINE_API RenderComponent
 {
 public:
-    RenderComponent(EntityManager::Entity entity, double positionX, double positionY);
+    RenderComponent() = default;
+    virtual void Create(EntityManager::Entity entity, const glm::dvec2& position, MovementType movement);
     virtual ~RenderComponent() = default;
-    virtual void Update(float dt) = 0;
-    virtual RenderComponentType GetType() = 0;
-    virtual void Receive(Message* message) = 0;
-    virtual void SetPosition(double positionX, double positionY);
+    virtual Event* Update() = 0;
+    virtual void Destroy() = 0;
+    virtual void Receive(Event* message) = 0;
+    void SetPosition(const glm::dvec2& position);
     EntityManager::Entity GetEntity();
-    double GetSpritePositionX();
-    double GetSpritePositionY();
+    glm::dvec2 GetSpritePosition();
+    MovementType GetMovementType();
+    bool IsEnabled();
+    void Enable();
+    void Disable();
+    virtual ComponentType GetComponentType() = 0;
 
 protected:
-    double m_spritePositionX;
-    double m_spritePositionY;
+    glm::dvec2 m_spritePosition;
+    glm::dvec2 m_lastSpritePosition;
     EntityManager::Entity m_entity;
-    // TODO add component types and then I can register component based on type and its constructor
+    bool m_enabled;
+    MovementType m_movement;
 };

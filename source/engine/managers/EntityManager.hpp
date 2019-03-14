@@ -1,5 +1,5 @@
 #pragma once
-#include "EngineAPI.hpp"
+#include "../EngineAPI.hpp"
 
 class ENGINE_API EntityManager
 {
