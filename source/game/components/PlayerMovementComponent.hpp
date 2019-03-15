@@ -14,4 +14,5 @@ public:
 private:
     glm::dvec2 m_lastPosition;
     bool m_collisionUp;
+    bool m_temporaryDisabled;
 };

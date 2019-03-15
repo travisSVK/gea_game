@@ -18,7 +18,7 @@ public:
     virtual ComponentType GetComponentType() = 0;
     void SetPosition(const glm::dvec2& position);
     void SetCenterPosition(const glm::dvec2& position);
-    virtual bool CheckCollision(CollisionComponent* collisionComponent, ComponentType collisionType, ComponentType& returnCollisionType, DirectionType& collisionDirection, DirectionType& collisionDirectionOther);
+    virtual bool CheckCollision(CollisionComponent* collisionComponent, DirectionType& collisionDirection, DirectionType& collisionDirectionOther);
 
     EntityManager::Entity GetEntity();
     glm::dvec2 GetPosition();

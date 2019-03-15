@@ -11,6 +11,7 @@
 #include "components/SpriteRenderComponent.hpp"
 #include "components/StaticRenderComponent.hpp"
 #include "components/DoorRenderComponent.hpp"
+#include "components/EnemyDoorRenderComponent.hpp"
 
 #include "components/PlayerMovementComponent.hpp"
 #include "components/ProjectileMovementComponent.hpp"
@@ -30,8 +31,7 @@
 #include "handlers/EventHandler.hpp"
 #include "handlers/InputHandler.hpp"
 
-#include <chrono>
-#include <iostream>
+#include "RandomNumberGenerator.hpp"
 
 GameSystem::GameSystem() : System()
 {
@@ -40,7 +40,7 @@ GameSystem::GameSystem() : System()
 
 bool GameSystem::Init(int width, int height)
 {
-    SDL_Log("Initializing the engine...\n");
+    SDL_Log("Initializing SDL...\n");
 
     if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
     {
@@ -48,7 +48,7 @@ bool GameSystem::Init(int width, int height)
         return false;
     }
 
-    if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 1, 4096) < 0)
+    if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 1, 4096) != 0)
     {
         return false;
     }
@@ -83,15 +83,10 @@ bool GameSystem::Init(int width, int height)
     //Clear screen
     SDL_RenderClear(m_renderer);
 
-    SDL_Log("Engine up and running...\n");
+    SDL_Log("SDL up and running...\n");
 
     m_gameOver = false;
     return true;
-
-    m_counterRender = 0;
-    m_elapsedRender = 0;
-    m_counterCollision = 0.0;
-    m_elapsedCollision = 0.0;
 }
 
 void GameSystem::Create()
@@ -169,21 +164,45 @@ void GameSystem::Create()
         CreateProjectile* createProjectile = event->GetMessage<CreateProjectile>();
         MovementComponent* mc = componentsMap.at(event->m_entity);
         double posOffset = 0;
-        if (mc->GetDirection() == LEFT)
+        if ((mc->GetMovement() == MovementType::CROUCHING_LEFT) || (mc->GetMovement() == MovementType::CROUCHING_RIGHT))
         {
-            posOffset = -20;
+            posOffset = 25;
         }
         else
         {
-            posOffset = 20;
+            posOffset = 15;
         }
         movementSystem->CreateComponent(
             ComponentType::ProjectileMovement, 
             createProjectile->m_newEntity, 
-            glm::dvec2(mc->GetPosition().x + posOffset, mc->GetPosition().y + 15),
+            glm::dvec2(mc->GetPosition().x, mc->GetPosition().y + posOffset),
             mc->GetDirection());
     }
     );
+    movementEventHandler->RegisterHandler(
+        MessageType::CREATE_ENEMY,
+        [this](MovementSystem* movementSystem, const std::unordered_map<EntityManager::Entity, MovementComponent*>& componentsMap, Event* event)
+    {
+        CreateEnemy* createEnemy = event->GetMessage<CreateEnemy>();
+        DirectionType dir;
+        if (createEnemy->m_position.x < 370)
+        {
+            dir = DirectionType::DIR_RIGHT;
+        }
+        else
+        {
+            dir = DirectionType::DIR_LEFT;
+        }
+        movementSystem->CreateComponent(
+            ComponentType::AIMovement,
+            createEnemy->m_newEntity,
+            createEnemy->m_position,
+            m_playerPosition,
+            dir,
+            m_entityManager);
+    }
+    );
+
     movementEventHandler->RegisterHandler(
         MessageType::COLLISION_HAPPENED,
         [this](MovementSystem* movementSystem, const std::unordered_map<EntityManager::Entity, MovementComponent*>& componentsMap, Event* event)
@@ -214,6 +233,22 @@ void GameSystem::Create()
         }
     }
     );
+    movementEventHandler->RegisterHandler(
+        MessageType::PLAYER_HIDDEN,
+        [](MovementSystem* movementSystem, const std::unordered_map<EntityManager::Entity, MovementComponent*>& componentsMap, Event* event)
+    {
+        PlayerHidden* playerHidden = event->GetMessage<PlayerHidden>();
+        componentsMap.at(playerHidden->m_playerEntity)->Receive(event);
+    }
+    );
+    movementEventHandler->RegisterHandler(
+        MessageType::CROUCH,
+        [this](MovementSystem* movementSystem, const std::unordered_map<EntityManager::Entity, MovementComponent*>& componentsMap, Event* event)
+    {
+        componentsMap.at(event->m_entity)->Receive(event);
+    }
+    );
+
     MovementSystem* movementSystem = new MovementSystem(movementEventHandler);
     m_systems.push_back(movementSystem);
     m_systemsMap[SystemType::Movement] = movementSystem;
@@ -351,16 +386,55 @@ void GameSystem::Create()
         {
             targetEntity = m_playerEntity;
         }
+        double xPosition;
+        if (cc->GetPosition().x >= 630.0)
+        {
+            xPosition = 630.0;
+        }
+        else
+        {
+            xPosition = cc->GetPosition().x;
+        }
         collisionSystem->CreateComponent(
             ComponentType::ProjectileCollision,
             createProjectile->m_newEntity,
             event->m_entity,
             targetEntity,
-            glm::dvec2(cc->GetPosition().x, cc->GetPosition().y - 5),
+            glm::dvec2(xPosition, cc->GetPosition().y - 5),
             glm::ivec2(20,5)
             );
     }
     );
+    collisionEventHandler->RegisterHandler(
+        MessageType::CREATE_ENEMY,
+        [this](CollisionSystem* collisionSystem, const std::unordered_map<EntityManager::Entity, CollisionComponent*>& componentsMap, Event* event)
+    {
+        CreateEnemy* createEnemy = event->GetMessage<CreateEnemy>();
+        collisionSystem->CreateComponent(
+            ComponentType::CharacterCollision,
+            createEnemy->m_newEntity,
+            createEnemy->m_position,
+            glm::ivec2(20, 40),
+            false);
+    }
+    );
+
+    collisionEventHandler->RegisterHandler(
+        MessageType::PLAYER_HIDDEN,
+        [](CollisionSystem* collisionSystem, const std::unordered_map<EntityManager::Entity, CollisionComponent*>& componentsMap, Event* event)
+    {
+        PlayerHidden* playerHidden = event->GetMessage<PlayerHidden>();
+        componentsMap.at(playerHidden->m_playerEntity)->Receive(event);
+    }
+    );
+    collisionEventHandler->RegisterHandler(
+        MessageType::CROUCH,
+        [this](CollisionSystem* collisionSystem, const std::unordered_map<EntityManager::Entity, CollisionComponent*>& componentsMap, Event* event)
+    {
+        componentsMap.at(event->m_entity)->Receive(event);
+    }
+    );
+
     CollisionSystem* collisionSystem = new CollisionSystem(collisionEventHandler);
     m_systems.push_back(collisionSystem);
     m_systemsMap[SystemType::Collision] = collisionSystem;
@@ -548,7 +622,7 @@ void GameSystem::Create()
             }
             if (!excluded)
             {
-                rc->SetPosition(glm::dvec2(0, - moveUp->m_moveLength));
+                rc->SetPosition(glm::dvec2(0, -moveUp->m_moveLength));
             }
         }
     }
@@ -560,26 +634,59 @@ void GameSystem::Create()
         CreateProjectile* createProjectile = event->GetMessage<CreateProjectile>();
         RenderComponent* rc = componentsMap.at(event->m_entity);
         MovementType mt = rc->GetMovementType();
-        if (mt == MovementType::NO_MOVEMENT_LEFT)
+        if ((mt == MovementType::NO_MOVEMENT_LEFT) || (mt == MovementType::CROUCHING_LEFT))
         {
             mt = MovementType::LEFT;
         }
-        else if (mt == MovementType::NO_MOVEMENT_RIGHT)
+        else if ((mt == MovementType::NO_MOVEMENT_RIGHT) || (mt == MovementType::CROUCHING_RIGHT))
         {
             mt = RIGHT;
+        }
+        double posOffset = 0;
+        if ((rc->GetMovementType() == MovementType::CROUCHING_LEFT) || (rc->GetMovementType() == MovementType::CROUCHING_RIGHT))
+        {
+            posOffset = 25;
+        }
+        else
+        {
+            posOffset = 15;
         }
         renderSystem->CreateComponent(
             ComponentType::SpriteRender,
             createProjectile->m_newEntity,
             m_renderer,
             std::string(createProjectile->m_projetileSprites),
-            glm::dvec2(rc->GetSpritePosition().x, rc->GetSpritePosition().y + 15),
+            glm::dvec2(rc->GetSpritePosition().x, rc->GetSpritePosition().y + posOffset),
             mt);
     }
     );
     renderEventHandler->RegisterHandler(
+        MessageType::CREATE_ENEMY,
+        [this](RenderSystem* renderSystem, const std::unordered_map<EntityManager::Entity, RenderComponent*>& componentsMap, Event* event)
+    {
+        CreateEnemy* createEnemy = event->GetMessage<CreateEnemy>();
+        MovementType mt;
+        if (createEnemy->m_position.x < 370.0)
+        {
+            mt = MovementType::NO_MOVEMENT_RIGHT;
+        }
+        else
+        {
+            mt = MovementType::NO_MOVEMENT_LEFT;
+        }
+        renderSystem->CreateComponent(
+            ComponentType::SpritesheetRender,
+            createEnemy->m_newEntity,
+            m_renderer,
+            std::string("data/sprite/enemy/enemy.json"),
+            createEnemy->m_position,
+            mt);
+    }
+    );
+
+    renderEventHandler->RegisterHandler(
         MessageType::COLLISION_HAPPENED,
-        [this](RenderSystem* movementSystem, const std::unordered_map<EntityManager::Entity, RenderComponent*>& componentsMap, Event* event)
+        [this](RenderSystem* renderSystem, const std::unordered_map<EntityManager::Entity, RenderComponent*>& componentsMap, Event* event)
     {
         CollisionHappened* collisionHappened = event->GetMessage<CollisionHappened>();
         if (collisionHappened->m_firstColComponentType != ComponentType::StaticCollision)
@@ -612,32 +719,60 @@ void GameSystem::Create()
     );
     renderEventHandler->RegisterHandler(
         MessageType::PLAYER_ELIMINATED,
-        [](RenderSystem* movementSystem, const std::unordered_map<EntityManager::Entity, RenderComponent*>& componentsMap, Event* event)
+        [](RenderSystem* renderSystem, const std::unordered_map<EntityManager::Entity, RenderComponent*>& componentsMap, Event* event)
     {
-        componentsMap.at(event->m_entity)->Receive(event);
+        if (componentsMap.find(event->m_entity) != componentsMap.end())
+        {
+            componentsMap.at(event->m_entity)->Receive(event);
+        }
     }
     );
     renderEventHandler->RegisterHandler(
         MessageType::PLAYER_FINISHED,
-        [](RenderSystem* movementSystem, const std::unordered_map<EntityManager::Entity, RenderComponent*>& componentsMap, Event* event)
+        [](RenderSystem* renderSystem, const std::unordered_map<EntityManager::Entity, RenderComponent*>& componentsMap, Event* event)
     {
         componentsMap.at(event->m_entity)->Receive(event);
     }
     );
     renderEventHandler->RegisterHandler(
         MessageType::DRIVE_CAR,
-        [](RenderSystem* movementSystem, const std::unordered_map<EntityManager::Entity, RenderComponent*>& componentsMap, Event* event)
+        [](RenderSystem* renderSystem, const std::unordered_map<EntityManager::Entity, RenderComponent*>& componentsMap, Event* event)
+    {
+        if (componentsMap.find(event->m_entity) != componentsMap.end())
+        {
+            componentsMap.at(event->m_entity)->Receive(event);
+        }
+    }
+    );
+    renderEventHandler->RegisterHandler(
+        MessageType::OPEN_DOOR,
+        [](RenderSystem* renderSystem, const std::unordered_map<EntityManager::Entity, RenderComponent*>& componentsMap, Event* event)
     {
         componentsMap.at(event->m_entity)->Receive(event);
     }
     );
     renderEventHandler->RegisterHandler(
-        MessageType::OPEN_DOOR,
-        [](RenderSystem* movementSystem, const std::unordered_map<EntityManager::Entity, RenderComponent*>& componentsMap, Event* event)
+        MessageType::PLAYER_HIDDEN,
+        [](RenderSystem* renderSystem, const std::unordered_map<EntityManager::Entity, RenderComponent*>& componentsMap, Event* event)
     {
-        componentsMap.at(event->m_entity)->Receive(event);
+        PlayerHidden* playerHidden = event->GetMessage<PlayerHidden>();
+        componentsMap.at(playerHidden->m_playerEntity)->Receive(event);
     }
     );
+    renderEventHandler->RegisterHandler(
+        MessageType::SPAWN_ENEMY,
+        [this](RenderSystem* renderSystem, const std::unordered_map<EntityManager::Entity, RenderComponent*>& componentsMap, Event* event)
+    {
+        if (event->m_entity == m_playerEntity)
+        {
+            for (const auto& component : componentsMap)
+            {
+                component.second->Receive(event);
+            }
+        }
+    }
+    );
+    
     RenderSystem* renderSystem = new RenderSystem(renderEventHandler);
     m_systems.push_back(renderSystem);
     m_systemsMap[SystemType::Render] = renderSystem;
@@ -714,12 +849,33 @@ void GameSystem::Create()
     renderSystem->RegisterComponent<EntityManager::Entity, SDL_Renderer*, const std::string&, const glm::dvec2&, const glm::dvec2&>(
         ComponentType::DoorRender, doorRenderConstr);
 
+    std::function<RenderComponent*(RenderComponent*, EntityManager::Entity, SDL_Renderer*, const std::string&, const glm::dvec2&)> enemyDoorRenderConstr =
+        [this](RenderComponent* renderComponent, EntityManager::Entity entity, SDL_Renderer* renderer, const std::string& path, const glm::dvec2& position) -> RenderComponent*
+    {
+        if (!renderComponent)
+        {
+            EnemyDoorRenderComponent* newComponent = new EnemyDoorRenderComponent();
+            newComponent->Create(entity, renderer, path, position, m_entityManager);
+            renderComponent = newComponent;
+        }
+        else
+        {
+            dynamic_cast<EnemyDoorRenderComponent*>(renderComponent)->Create(entity, renderer, path, position, m_entityManager);
+        }
+        return renderComponent;
+    };
+    renderSystem->RegisterComponent< EntityManager::Entity, SDL_Renderer*, const std::string&, const glm::dvec2&>(
+        ComponentType::EnemyDoorRender, enemyDoorRenderConstr);
+
     movementSystem->Subscribe([renderSystem](Event* event) {renderSystem->Receive(event); });
     inputSystem->Subscribe([renderSystem](Event* event) {renderSystem->Receive(event); });
     collisionSystem->Subscribe([renderSystem](Event* event) {renderSystem->Receive(event); });
     cameraSystem->Subscribe([renderSystem](Event* event) {renderSystem->Receive(event); });
     Subscribe([renderSystem](Event* event) {renderSystem->Receive(event); });
     renderSystem->Subscribe([this](Event* event) {Receive(event); });
+    renderSystem->Subscribe([movementSystem](Event* event) {movementSystem->Receive(event); });
+    renderSystem->Subscribe([collisionSystem](Event* event) {collisionSystem->Receive(event); });
+    renderSystem->Subscribe([renderSystem](Event* event) {renderSystem->Receive(event); });
     
     m_entityManager = new EntityManager();
     m_playerLives = 3;
@@ -727,7 +883,7 @@ void GameSystem::Create()
     CreateLevel(renderSystem, collisionSystem, movementSystem, inputSystem, cameraSystem);
 
     // game input handling
-    /*m_gameEntity = m_entityManager->CreateEntity();
+    m_gameEntity = m_entityManager->CreateEntity();
     InputHandler* inputHandler = new InputHandler();
     inputHandler->RegisterHandler(
         SDLK_ESCAPE,
@@ -736,14 +892,22 @@ void GameSystem::Create()
         ExitGame* message = nullptr;
         if (type == SDL_KEYDOWN)
         {
-            message = new ExitGame();
+            Event* event = EventPool::GetEvent(EXIT_GAME);
+            if (event)
+            {
+                message = event->GetMessage<ExitGame>();
+            }
+            else
+            {
+                message = new ExitGame();
+            }
             message->m_type = MessageType::EXIT_GAME;
         }
         return message;
     }
     );
     std::vector<SDL_Keycode> keycodes{ SDLK_ESCAPE };
-    inputSystem->CreateComponent(ComponentType::BasicInput, m_gameEntity, inputHandler, keycodes);*/
+    inputSystem->CreateComponent(ComponentType::BasicInput, m_gameEntity, inputHandler, keycodes);
 
     m_hudTexture = RenderManager::CreateTexture(m_renderer, "data/sprite/hud/hud_bckg.png");
     m_hudLives = RenderManager::CreateTexture(m_renderer, "data/sprite/hud/hud_live.png");
@@ -761,6 +925,9 @@ void GameSystem::CreateLevel(RenderSystem* renderSystem, CollisionSystem* collis
     m_levelOver = false;
     m_levelFinished = false;
     m_drawScore = false;
+    m_playerTemporaryDisabled = false;
+    m_bonusScore = false;
+    m_buildingLevel = 0;
     m_playerScore = 0;
     m_playerEntity = m_entityManager->CreateEntity();
     double offset = 0.0;
@@ -799,8 +966,7 @@ void GameSystem::CreateLevel(RenderSystem* renderSystem, CollisionSystem* collis
             numberOffset += 15.0;
         }
         
-        // TEST
-        if (i == 0)
+        if (((i % 2) == 0) && (i != 0) && (i != 30))
         {
             wallEntity = m_entityManager->CreateEntity();
             InputHandler* doorInputHandler = new InputHandler();
@@ -828,27 +994,60 @@ void GameSystem::CreateLevel(RenderSystem* renderSystem, CollisionSystem* collis
             );
             std::vector<SDL_Keycode> keycodes{ SDLK_UP };
             inputSystem->CreateComponent(ComponentType::BasicInput, wallEntity, doorInputHandler, keycodes);
-            
-            renderSystem->CreateComponent(ComponentType::DoorRender, wallEntity, m_renderer, std::string("data/sprite/door/left/door.json"), glm::dvec2(200.0, 85.0 + offset), DoorState::CLOSED);
+            int random = RandomNumberGenerator::GenerateRandomNumber(0, 3);
+            if (random == 0)
+            {
+                renderSystem->CreateComponent(ComponentType::DoorRender, wallEntity, m_renderer, std::string("data/sprite/door/left/door.json"), glm::dvec2(200.0, 85.0 + offset), glm::dvec2(160.0, 105.0));
+                wallEntity = m_entityManager->CreateEntity();
+                renderSystem->CreateComponent(ComponentType::EnemyDoorRender, wallEntity, m_renderer, std::string("data/sprite/enemydoor/left/door.json"), glm::dvec2(300.0, 85.0 + offset));
+                wallEntity = m_entityManager->CreateEntity();
+                renderSystem->CreateComponent(ComponentType::EnemyDoorRender, wallEntity, m_renderer, std::string("data/sprite/enemydoor/right/door.json"), glm::dvec2(480.0, 85.0 + offset));
+                wallEntity = m_entityManager->CreateEntity();
+                renderSystem->CreateComponent(ComponentType::EnemyDoorRender, wallEntity, m_renderer, std::string("data/sprite/enemydoor/right/door.json"), glm::dvec2(580.0, 85.0 + offset));
+            }
+            if (random == 1)
+            {
+                renderSystem->CreateComponent(ComponentType::DoorRender, wallEntity, m_renderer, std::string("data/sprite/door/left/door.json"), glm::dvec2(300.0, 85.0 + offset), glm::dvec2(160.0, 105.0));
+                wallEntity = m_entityManager->CreateEntity();
+                renderSystem->CreateComponent(ComponentType::EnemyDoorRender, wallEntity, m_renderer, std::string("data/sprite/enemydoor/left/door.json"), glm::dvec2(200.0, 85.0 + offset));
+                wallEntity = m_entityManager->CreateEntity();
+                renderSystem->CreateComponent(ComponentType::EnemyDoorRender, wallEntity, m_renderer, std::string("data/sprite/enemydoor/right/door.json"), glm::dvec2(480.0, 85.0 + offset));
+                wallEntity = m_entityManager->CreateEntity();
+                renderSystem->CreateComponent(ComponentType::EnemyDoorRender, wallEntity, m_renderer, std::string("data/sprite/enemydoor/right/door.json"), glm::dvec2(580.0, 85.0 + offset));
+            }
+            if (random == 2)
+            {
+                renderSystem->CreateComponent(ComponentType::DoorRender, wallEntity, m_renderer, std::string("data/sprite/door/right/door.json"), glm::dvec2(480.0, 85.0 + offset), glm::dvec2(160.0, 105.0));
+                wallEntity = m_entityManager->CreateEntity();
+                renderSystem->CreateComponent(ComponentType::EnemyDoorRender, wallEntity, m_renderer, std::string("data/sprite/enemydoor/left/door.json"), glm::dvec2(200.0, 85.0 + offset));
+                wallEntity = m_entityManager->CreateEntity();
+                renderSystem->CreateComponent(ComponentType::EnemyDoorRender, wallEntity, m_renderer, std::string("data/sprite/enemydoor/left/door.json"), glm::dvec2(300.0, 85.0 + offset));
+                wallEntity = m_entityManager->CreateEntity();
+                renderSystem->CreateComponent(ComponentType::EnemyDoorRender, wallEntity, m_renderer, std::string("data/sprite/enemydoor/right/door.json"), glm::dvec2(580.0, 85.0 + offset));
+            }
+            if (random == 3)
+            {
+                renderSystem->CreateComponent(ComponentType::DoorRender, wallEntity, m_renderer, std::string("data/sprite/door/right/door.json"), glm::dvec2(580.0, 85.0 + offset), glm::dvec2(160.0, 105.0));
+                wallEntity = m_entityManager->CreateEntity();
+                renderSystem->CreateComponent(ComponentType::EnemyDoorRender, wallEntity, m_renderer, std::string("data/sprite/enemydoor/left/door.json"), glm::dvec2(200.0, 85.0 + offset));
+                wallEntity = m_entityManager->CreateEntity();
+                renderSystem->CreateComponent(ComponentType::EnemyDoorRender, wallEntity, m_renderer, std::string("data/sprite/enemydoor/left/door.json"), glm::dvec2(300.0, 85.0 + offset));
+                wallEntity = m_entityManager->CreateEntity();
+                renderSystem->CreateComponent(ComponentType::EnemyDoorRender, wallEntity, m_renderer, std::string("data/sprite/enemydoor/right/door.json"), glm::dvec2(480.0, 85.0 + offset));
+            }
+        }
+        else if ((i != 0) && (i != 30))
+        {
             wallEntity = m_entityManager->CreateEntity();
-            renderSystem->CreateComponent(ComponentType::StaticRender, wallEntity, m_renderer, std::string("data/sprite/building/blue_door_left.png"), glm::dvec2(300.0, 85.0 + offset), glm::ivec2(30, 50));
+            renderSystem->CreateComponent(ComponentType::EnemyDoorRender, wallEntity, m_renderer, std::string("data/sprite/enemydoor/left/door.json"), glm::dvec2(200.0, 85.0 + offset));
+            wallEntity = m_entityManager->CreateEntity();
+            renderSystem->CreateComponent(ComponentType::EnemyDoorRender, wallEntity, m_renderer, std::string("data/sprite/enemydoor/left/door.json"), glm::dvec2(300.0, 85.0 + offset));
+            wallEntity = m_entityManager->CreateEntity();
+            renderSystem->CreateComponent(ComponentType::EnemyDoorRender, wallEntity, m_renderer, std::string("data/sprite/enemydoor/right/door.json"), glm::dvec2(480.0, 85.0 + offset));
+            wallEntity = m_entityManager->CreateEntity();
+            renderSystem->CreateComponent(ComponentType::EnemyDoorRender, wallEntity, m_renderer, std::string("data/sprite/enemydoor/right/door.json"), glm::dvec2(580.0, 85.0 + offset));
         }
 
-        if (i != 30)
-        {
-            // TEST
-            if (i != 0)
-            {
-                wallEntity = m_entityManager->CreateEntity();
-                renderSystem->CreateComponent(ComponentType::StaticRender, wallEntity, m_renderer, std::string("data/sprite/building/blue_door_left.png"), glm::dvec2(200.0, 85.0 + offset), glm::ivec2(30, 50));
-            }
-            wallEntity = m_entityManager->CreateEntity();
-            renderSystem->CreateComponent(ComponentType::StaticRender, wallEntity, m_renderer, std::string("data/sprite/building/blue_door_left.png"), glm::dvec2(300.0, 85.0 + offset), glm::ivec2(30, 50));
-            wallEntity = m_entityManager->CreateEntity();
-            renderSystem->CreateComponent(ComponentType::StaticRender, wallEntity, m_renderer, std::string("data/sprite/building/blue_door_right.png"), glm::dvec2(480.0, 85.0 + offset), glm::ivec2(30, 50));
-            wallEntity = m_entityManager->CreateEntity();
-            renderSystem->CreateComponent(ComponentType::StaticRender, wallEntity, m_renderer, std::string("data/sprite/building/blue_door_right.png"), glm::dvec2(580.0, 85.0 + offset), glm::ivec2(30, 50));
-        }
         wallEntity = m_entityManager->CreateEntity();
         renderSystem->CreateComponent(ComponentType::StaticRender, wallEntity, m_renderer, std::string("data/sprite/building/wall_horizontal.png"), glm::dvec2(150.0, 145.0 + offset), glm::ivec2(225, 10));
         collisionSystem->CreateComponent(ComponentType::StaticCollision, wallEntity, glm::dvec2(150.0, 145.0 + offset), glm::ivec2(225, 10));
@@ -897,18 +1096,6 @@ void GameSystem::CreateLevel(RenderSystem* renderSystem, CollisionSystem* collis
                 glm::dvec2(160.0, 105.0 + offset),
                 MovementType::RIGHT);
         }
-        else
-        {
-            EntityManager::Entity enemyEntity = m_entityManager->CreateEntity();
-            movementSystem->CreateComponent(ComponentType::AIMovement, enemyEntity, glm::dvec2(600.0, 95.0 + offset), glm::dvec2(160.0, 95.0), DirectionType::DIR_LEFT, m_entityManager);
-            renderSystem->CreateComponent(ComponentType::SpritesheetRender, enemyEntity, m_renderer, std::string("data/sprite/enemy/enemy.json"), glm::dvec2(600.0, 95.0 + offset), MovementType::NO_MOVEMENT_LEFT);
-            collisionSystem->CreateComponent(ComponentType::CharacterCollision, enemyEntity, glm::dvec2(600.0, 95.0 + offset), glm::ivec2(20, 40), false);
-
-            enemyEntity = m_entityManager->CreateEntity();
-            movementSystem->CreateComponent(ComponentType::AIMovement, enemyEntity, glm::dvec2(160.0, 95.0 + offset), glm::dvec2(160.0, 95.0), DirectionType::DIR_RIGHT, m_entityManager);
-            renderSystem->CreateComponent(ComponentType::SpritesheetRender, enemyEntity, m_renderer, std::string("data/sprite/enemy/enemy.json"), glm::dvec2(160.0, 95.0 + offset), MovementType::NO_MOVEMENT_LEFT);
-            collisionSystem->CreateComponent(ComponentType::CharacterCollision, enemyEntity, glm::dvec2(160.0, 95.0 + offset), glm::ivec2(20, 40), false);
-        }
     }
 
     EntityManager::Entity elevatorEntity1 = m_entityManager->CreateEntity();
@@ -956,6 +1143,8 @@ void GameSystem::CreateLevel(RenderSystem* renderSystem, CollisionSystem* collis
     renderSystem->CreateComponent(ComponentType::SpritesheetRender, m_playerEntity, m_renderer, std::string("data/sprite/player/player.json"), glm::dvec2(160.0, 95.0), MovementType::NO_MOVEMENT_RIGHT);
     collisionSystem->CreateComponent(ComponentType::CharacterCollision, m_playerEntity, glm::dvec2(160.0, 105.0), glm::ivec2(20, 40), true);
     cameraSystem->CreateComponent(ComponentType::HorizontalCamera, m_playerEntity, glm::dvec2(160.0, 105.0), std::vector<EntityManager::Entity>{m_playerEntity});
+    m_playerPosition = glm::dvec2(160.0, 105.0);
+    m_playerLastPosition = m_playerPosition;
 
     // create input handler for player input component
     inputHandler = new InputHandler();
@@ -982,7 +1171,7 @@ void GameSystem::CreateLevel(RenderSystem* renderSystem, CollisionSystem* collis
         else
         {
             keycodes[SDLK_LEFT] = false;
-            if (!keycodes[SDLK_RIGHT])
+            if (!keycodes[SDLK_RIGHT] && (!keycodes[SDLK_LCTRL]))
             {
                 Event* event = EventPool::GetEvent(MOVE);
                 if (event)
@@ -1023,7 +1212,7 @@ void GameSystem::CreateLevel(RenderSystem* renderSystem, CollisionSystem* collis
         else
         {
             keycodes[SDLK_RIGHT] = false;
-            if (!keycodes[SDLK_LEFT])
+            if (!keycodes[SDLK_LEFT] && (!keycodes[SDLK_LCTRL]))
             {
                 Event* event = EventPool::GetEvent(MOVE);
                 if (event)
@@ -1048,19 +1237,22 @@ void GameSystem::CreateLevel(RenderSystem* renderSystem, CollisionSystem* collis
         CreateProjectile* message = nullptr;
         if ((type == SDL_KEYDOWN) && (!keycodes[SDLK_SPACE]))
         {
-            keycodes[SDLK_SPACE] = true;
-            Event* event = EventPool::GetEvent(CREATE_PROJECTILE);
-            if (event)
+            if (!m_playerTemporaryDisabled)
             {
-                message = event->GetMessage<CreateProjectile>();
+                keycodes[SDLK_SPACE] = true;
+                Event* event = EventPool::GetEvent(CREATE_PROJECTILE);
+                if (event)
+                {
+                    message = event->GetMessage<CreateProjectile>();
+                }
+                else
+                {
+                    message = new CreateProjectile();
+                }
+                message->m_type = MessageType::CREATE_PROJECTILE;
+                message->m_projetileSprites = "data/sprite/projectile/projectile.json";
+                message->m_newEntity = m_entityManager->CreateEntity();
             }
-            else
-            {
-                message = new CreateProjectile();
-            }
-            message->m_type = MessageType::CREATE_PROJECTILE;
-            message->m_projetileSprites = "data/sprite/projectile/projectile.json";
-            message->m_newEntity = m_entityManager->CreateEntity();
         }
         else
         {
@@ -1069,8 +1261,47 @@ void GameSystem::CreateLevel(RenderSystem* renderSystem, CollisionSystem* collis
         return message;
     }
     );
+    inputHandler->RegisterHandler(
+        SDLK_LCTRL,
+        [this](InputComponent* inputComponent, std::unordered_map<SDL_Keycode, bool>& keycodes, Uint32 type)
+    {
+        Crouch* message = nullptr;
+        if ((type == SDL_KEYDOWN) && (!keycodes[SDLK_LCTRL]))
+        {
+            if (!m_playerTemporaryDisabled)
+            {
+                keycodes[SDLK_LCTRL] = true;
+                Event* event = EventPool::GetEvent(CROUCH);
+                if (event)
+                {
+                    message = event->GetMessage<Crouch>();
+                }
+                else
+                {
+                    message = new Crouch();
+                }
+                message->m_type = MessageType::CROUCH;
+            }
+        }
+        else if (type == SDL_KEYUP)
+        {
+            keycodes[SDLK_LCTRL] = false;
+            Event* event = EventPool::GetEvent(CROUCH);
+            if (event)
+            {
+                message = event->GetMessage<Crouch>();
+            }
+            else
+            {
+                message = new Crouch();
+            }
+            message->m_type = MessageType::CROUCH;
+        }
+        return message;
+    }
+    );
     keycodes.clear();
-    keycodes = { SDLK_RIGHT, SDLK_LEFT, SDLK_SPACE, SDLK_DOWN };
+    keycodes = { SDLK_RIGHT, SDLK_LEFT, SDLK_SPACE, SDLK_DOWN, SDLK_LCTRL };
     inputSystem->CreateComponent(ComponentType::BasicInput, m_playerEntity, inputHandler, keycodes);
 }
 
@@ -1151,6 +1382,17 @@ void GameSystem::Receive(Event* event)
                 }
             }
         }
+        else if (((collisionHappend->m_firstColEntity == m_playerEntity) && (collisionHappend->m_firstColComponentType == CharacterCollision) && (collisionHappend->m_secondColComponentType == StaticCollision))
+            || ((collisionHappend->m_secondColEntity == m_playerEntity) && (collisionHappend->m_secondColComponentType == CharacterCollision) && (collisionHappend->m_firstColComponentType == StaticCollision)))
+        {
+            m_playerPosition = m_playerLastPosition;
+        }
+    }
+    else if ((event->m_type == POSITION_CHANGE) && (event->m_entity == m_playerEntity))
+    {
+        ChangePoisition* changePosition = event->GetMessage<ChangePoisition>();
+        m_playerLastPosition = m_playerPosition;
+        m_playerPosition = changePosition->m_absolutePosition;
     }
     else if (event->m_type == PLAYER_ELIMINATED)
     {
@@ -1171,7 +1413,15 @@ void GameSystem::Receive(Event* event)
         }
         else
         {
-            m_playerScore += 100;
+            if (m_bonusScore)
+            {
+                m_bonusScore = false;
+                m_playerScore += 500;
+            }
+            else
+            {
+                m_playerScore += 100;
+            }
         }
     }
     else if (event->m_type == PLAYER_FINISHED)
@@ -1215,7 +1465,27 @@ void GameSystem::Receive(Event* event)
     else if (event->m_type == MOVE_UP)
     {
         MoveUp* moveUp = event->GetMessage<MoveUp>();
+        if (((m_buildingLevel * 95.0) + 40) <= (m_playerHorizontalPosition + moveUp->m_moveLength))
+        {
+            ++m_buildingLevel;
+            SpawnEnemy* message;
+            Event* event = EventPool::GetEvent(SPAWN_ENEMY);
+            if (event)
+            {
+                message = event->GetMessage<SpawnEnemy>();
+            }
+            else
+            {
+                message = new SpawnEnemy();
+            }
+            message->m_type = SPAWN_ENEMY;
+            message->m_position = glm::dvec2(0.0, ((m_buildingLevel * 95.0) + 85.0) - (m_playerHorizontalPosition));
+            message->m_entity = m_playerEntity;
+            Notify(message);
+            EventPool::AddEvent(message);
+        }
         m_playerHorizontalPosition += moveUp->m_moveLength;
+
         if (m_playerHorizontalPosition >= (30.0 * 95.0))
         {
             PlayerFinished* playerFinished;
@@ -1238,6 +1508,18 @@ void GameSystem::Receive(Event* event)
     else if (event->m_type == EXIT_GAME)
     {
         m_gameOver = true;
+    }
+    else if (event->m_type == MessageType::PLAYER_HIDDEN)
+    {
+        if (m_playerTemporaryDisabled)
+        {
+            m_playerTemporaryDisabled = false;
+            m_bonusScore = true;
+        }
+        else
+        {
+            m_playerTemporaryDisabled = true;
+        }
     }
 }
 

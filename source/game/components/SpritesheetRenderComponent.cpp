@@ -15,42 +15,46 @@ void SpritesheetRenderComponent::Create(EntityManager::Entity entity, SDL_Render
         m_spritesheet = SpritesheetManager::ParseSpritesheet(path.c_str(), renderer);
     }
     m_finished = false;
+    m_temporaryDisabled = false;
 }
 
 Event* SpritesheetRenderComponent::Update()
 {
     Event* message = nullptr;
-    if (m_finished)
+    if (!m_temporaryDisabled)
     {
-        m_movement = LEFT;
-        m_spritePosition.x -= 2.0;
-        if (m_spritePosition.x <= 180.0)
+        if (m_finished)
         {
-            m_enabled = false;
-            Event* event = EventPool::GetEvent(PLAYER_FINISHED);
-            if (event)
+            m_movement = LEFT;
+            m_spritePosition.x -= 2.0;
+            if (m_spritePosition.x <= 180.0)
             {
-                message = event->GetMessage<PlayerFinished>();
+                m_enabled = false;
+                Event* event = EventPool::GetEvent(PLAYER_FINISHED);
+                if (event)
+                {
+                    message = event->GetMessage<PlayerFinished>();
+                }
+                else
+                {
+                    message = new PlayerFinished();
+                }
+                message->m_type = PLAYER_FINISHED;
             }
-            else
-            {
-                message = new PlayerFinished();
-            }
-            message->m_type = PLAYER_FINISHED;
         }
-    }
-    if ((m_movement == LEFT) || (m_movement == RIGHT) || (m_movement == DESTROYED_LEFT) || (m_movement == DESTROYED_RIGHT))
-    {
-        m_indexChangeRate += 0.016f;
-        Event* messageEliminated = UpdateSpriteIndex();
-        if (!message)
+        if ((m_movement == LEFT) || (m_movement == RIGHT) || (m_movement == DESTROYED_LEFT) || (m_movement == DESTROYED_RIGHT))
         {
-            message = messageEliminated;
+            m_indexChangeRate += 0.016f;
+            Event* messageEliminated = UpdateSpriteIndex();
+            if (!message)
+            {
+                message = messageEliminated;
+            }
         }
-    }
-    if (m_enabled)
-    {
-        Draw();
+        if (m_enabled)
+        {
+            Draw();
+        }
     }
     return message;
 }
@@ -87,7 +91,12 @@ Event* SpritesheetRenderComponent::UpdateSpriteIndex()
 void SpritesheetRenderComponent::Draw()
 {
     std::pair<SDL_Texture*, glm::ivec2> spriteSettings = m_spritesheet[m_movement][m_spriteIndex];
-    SDL_Rect rect = { m_spritePosition.x, m_spritePosition.y, spriteSettings.second.x, spriteSettings.second.y };
+    unsigned int yoffset = 0;
+    if ((m_movement == CROUCHING_LEFT) || (m_movement == CROUCHING_RIGHT))
+    {
+        yoffset = 20;
+    }
+    SDL_Rect rect = { m_spritePosition.x, m_spritePosition.y + yoffset, spriteSettings.second.x, spriteSettings.second.y };
 
     //Render texture to screen
     SDL_RenderCopy(m_renderer, spriteSettings.first, NULL, &rect);
@@ -119,11 +128,10 @@ void SpritesheetRenderComponent::Receive(Event* message)
                 m_movement = RIGHT;
                 break;
             case MovementType::NO_MOVEMENT_LEFT:
-                m_movement = NO_MOVEMENT_LEFT;
-                m_spriteIndex = 0;
-                break;
             case MovementType::NO_MOVEMENT_RIGHT:
-                m_movement = NO_MOVEMENT_RIGHT;
+            case MovementType::CROUCHING_LEFT:
+            case MovementType::CROUCHING_RIGHT:
+                m_movement = changePosition->m_movement;
                 m_spriteIndex = 0;
                 break;
             default: break;
@@ -181,6 +189,17 @@ void SpritesheetRenderComponent::Receive(Event* message)
     else if (message->m_type == MessageType::PLAYER_FINISHED)
     {
         m_finished = true;
+    }
+    else if (message->m_type == MessageType::PLAYER_HIDDEN)
+    {
+        if (m_temporaryDisabled)
+        {
+            m_temporaryDisabled = false;
+        }
+        else
+        {
+            m_temporaryDisabled = true;
+        }
     }
 }
 

@@ -18,44 +18,41 @@ std::vector<Event*> ProjectileCollisionComponent::Update(const std::vector<Colli
     {
         DirectionType collisionDirection;
         DirectionType otherCollisionDirection;
-        ComponentType otherCollisionType;
         if ((collisionComponent->GetEntity() != m_spawnedFromEntity) && 
-            collisionComponent->CheckCollision(this, ComponentType::ProjectileCollision, otherCollisionType, otherCollisionDirection, collisionDirection))
+            ((collisionComponent->GetComponentType() != ComponentType::CharacterCollision) || (collisionComponent->GetEntity() == m_targetEntity) || (m_targetEntity == -1)) &&
+            ((collisionComponent->GetComponentType() == ComponentType::StaticCollision) || (collisionComponent->GetComponentType() == ComponentType::CharacterCollision)) &&
+            collisionComponent->CheckCollision(this, otherCollisionDirection, collisionDirection))
         {
-            if ((otherCollisionType != ComponentType::CharacterCollision) || ((m_targetEntity != -1) && (collisionComponent->GetEntity() == m_targetEntity)) || (m_targetEntity == -1))
+            CollisionHappened* message;
+            Event* event = EventPool::GetEvent(COLLISION_HAPPENED);
+            if (event)
             {
-                CollisionHappened* message;
-                Event* event = EventPool::GetEvent(COLLISION_HAPPENED);
-                if (event)
-                {
-                    message = event->GetMessage<CollisionHappened>();
-                }
-                else
-                {
-                    message = new CollisionHappened();
-                }
-                message->m_firstColEntity = m_entity;
-                message->m_firstColComponentType = ComponentType::ProjectileCollision;
-                message->m_secondColEntity = collisionComponent->GetEntity();
-                message->m_secondColComponentType = otherCollisionType;
-                message->m_firstColDirection = collisionDirection;
-                message->m_secondColDirection = otherCollisionDirection;
-                message->m_type = MessageType::COLLISION_HAPPENED;
-                messages.push_back(message);
-                m_enabled = false;
+                message = event->GetMessage<CollisionHappened>();
             }
+            else
+            {
+                message = new CollisionHappened();
+            }
+            message->m_firstColEntity = m_entity;
+            message->m_firstColComponentType = ComponentType::ProjectileCollision;
+            message->m_secondColEntity = collisionComponent->GetEntity();
+            message->m_secondColComponentType = collisionComponent->GetComponentType();
+            message->m_firstColDirection = collisionDirection;
+            message->m_secondColDirection = otherCollisionDirection;
+            message->m_type = MessageType::COLLISION_HAPPENED;
+            messages.push_back(message);
+            m_enabled = false;
         }
     }
     return messages;
 }
 
-bool ProjectileCollisionComponent::CheckCollision(CollisionComponent* collisionComponent, ComponentType collisionType, ComponentType& returnCollisionType, DirectionType& collisionDirection, DirectionType& collisionDirectionOther)
+bool ProjectileCollisionComponent::CheckCollision(CollisionComponent* collisionComponent, DirectionType& collisionDirection, DirectionType& collisionDirectionOther)
 {
-    if (m_enabled && ((collisionType != ComponentType::CharacterCollision) || ((m_targetEntity != -1) && (collisionComponent->GetEntity() == m_targetEntity)) || (m_targetEntity == -1)) &&
-        (m_spawnedFromEntity != collisionComponent->GetEntity()) && (collisionType == ComponentType::StaticCollision) || (collisionType == ComponentType::CharacterCollision))
+    if (m_enabled && ((collisionComponent->GetComponentType() != ComponentType::CharacterCollision) || (collisionComponent->GetEntity() == m_targetEntity) || (m_targetEntity == -1)) &&
+        (m_spawnedFromEntity != collisionComponent->GetEntity()) && ((collisionComponent->GetComponentType() == ComponentType::StaticCollision) || (collisionComponent->GetComponentType() == ComponentType::CharacterCollision)))
     {
-        returnCollisionType = ComponentType::ProjectileCollision;
-        if (CollisionComponent::CheckCollision(collisionComponent, collisionType, returnCollisionType, collisionDirection, collisionDirectionOther))
+        if (CollisionComponent::CheckCollision(collisionComponent, collisionDirection, collisionDirectionOther))
         {
             m_enabled = false;
             return true;

@@ -20,6 +20,7 @@ public:
     EntityManager::Entity GetEntity();
     glm::dvec2 GetPosition();
     DirectionType GetDirection();
+    MovementType GetMovement();
     bool IsEnabled();
     void Enable();
     void Disable();

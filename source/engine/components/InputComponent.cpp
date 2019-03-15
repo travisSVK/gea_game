@@ -15,18 +15,23 @@ void InputComponent::Create(EntityManager::Entity entity, InputHandler* inputHan
     {
         m_keyCodes[keycode] = false;
     }
+    m_temporaryDisabled = false;
 }
 
 Event* InputComponent::Update(const SDL_Event& event)
 {
     
     Event* message = nullptr;
-    message = m_inputHandler->HandleInput(event.key.keysym.sym, this, m_keyCodes, event.type);
+    if (!m_temporaryDisabled)
+    {
+        message = m_inputHandler->HandleInput(event.key.keysym.sym, this, m_keyCodes, event.type);
+    }
     return message;
 }
 
 void InputComponent::Receive(Event* message)
-{}
+{
+}
 
 void InputComponent::Enable()
 {

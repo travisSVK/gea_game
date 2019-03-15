@@ -30,6 +30,30 @@ void AIMovementComponent::Create(EntityManager::Entity entity, const glm::dvec2&
 std::vector<Event*> AIMovementComponent::Update()
 {
     std::vector<Event*> messages;
+    if (((m_playerPosition.y <= m_position.y + 40) && (m_playerPosition.y >= m_position.y - 30)) && (m_reloadTime >= 3.0))
+    {
+        if (((m_playerPosition.x < m_position.x) && (m_direction == DIR_LEFT)) ||
+            ((m_playerPosition.x > m_position.x) && (m_direction == DIR_RIGHT)))
+        {
+            CreateProjectile* createProjectile;
+            Event* message = EventPool::GetEvent(CREATE_PROJECTILE);
+            if (message)
+            {
+                createProjectile = message->GetMessage<CreateProjectile>();
+            }
+            else
+            {
+                createProjectile = new CreateProjectile();
+            }
+
+            createProjectile->m_newEntity = m_entityManager->CreateEntity();
+            createProjectile->m_projetileSprites = "data/sprite/projectile/projectile.json";
+            createProjectile->m_type = CREATE_PROJECTILE;
+            messages.push_back(createProjectile);
+            m_reloadTime = 0.0f;
+        }
+    }
+
     glm::dvec2 positionChange(0.0, 0.0);
     m_reloadTime += 0.016f;
     m_lastPosition = m_position;
@@ -61,30 +85,6 @@ std::vector<Event*> AIMovementComponent::Update()
         {
             m_position.x += 2.0;
             positionChange.x += 2.0;
-        }
-    }
-
-    if (((m_playerPosition.y <= m_position.y + 40) && (m_playerPosition.y >= m_position.y - 30)) && (m_reloadTime >= 5.0))
-    {
-        if (((m_playerPosition.x < m_position.x) && (m_direction == DIR_LEFT)) ||
-            ((m_playerPosition.x > m_position.x) && (m_direction == DIR_RIGHT)))
-        {
-            CreateProjectile* createProjectile;
-            Event* message = EventPool::GetEvent(CREATE_PROJECTILE);
-            if (message)
-            {
-                createProjectile = message->GetMessage<CreateProjectile>();
-            }
-            else
-            {
-                createProjectile = new CreateProjectile();
-            }
-            
-            createProjectile->m_newEntity = m_entityManager->CreateEntity();
-            createProjectile->m_projetileSprites = "data/sprite/projectile/projectile.json";
-            createProjectile->m_type = CREATE_PROJECTILE;
-            messages.push_back(createProjectile);
-            m_reloadTime = 0.0f;
         }
     }
 

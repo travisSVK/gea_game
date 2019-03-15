@@ -9,10 +9,15 @@ void DoorRenderComponent::Create(EntityManager::Entity entity, EntityManager::En
     m_spriteIndex = 0;
     m_indexChangeRate = 0.0f;
     m_indexChangeRateTreshold = 0.1f;
-    m_spritesheet = SpritesheetManager::ParseSpritesheet(path.c_str(), renderer);
+    if (path.compare(m_path) != 0)
+    {
+        m_path = path;
+        m_spritesheet = SpritesheetManager::ParseSpritesheet(path.c_str(), renderer);
+    }
     m_doorState = CLOSED;
     m_playerEntity = playerEntity;
     m_playerPosition = playerPosition;
+    m_used = false;
 }
 
 Event* DoorRenderComponent::Update()
@@ -31,21 +36,37 @@ Event* DoorRenderComponent::Update()
 
 Event* DoorRenderComponent::UpdateSpriteIndex()
 {
-    PlayerEliminated* message = nullptr; // TODO door closed message
+    PlayerHidden* message = nullptr;
     if (m_indexChangeRate >= m_indexChangeRateTreshold)
     {
         m_spriteIndex += 1;
-        if (m_spriteIndex >= m_spritesheet[m_movement].size())
+        if (m_spriteIndex >= m_spritesheet[m_doorState].size())
         {
             if (m_doorState == OPENING)
             {
                 m_doorState = CLOSING;
-                // TODO send player hidden message
-                /*message = new PlayerEliminated();
-                message->m_type = PLAYER_ELIMINATED;*/
+                Event* event = EventPool::GetEvent(PLAYER_HIDDEN);
+                if (event)
+                {
+                    message = event->GetMessage<PlayerHidden>();
+                }
+                else
+                {
+                    message = new PlayerHidden();
+                }
+                message->m_type = PLAYER_HIDDEN;
+                message->m_playerEntity = m_playerEntity;
             }
             else if (m_doorState == CLOSING)
             {
+                if (m_used)
+                {
+                    m_enabled = false;
+                }
+                else
+                {
+                    m_used = true;
+                }
                 m_doorState = CLOSED;
             }
             m_spriteIndex = 0;
@@ -66,7 +87,7 @@ void DoorRenderComponent::Draw()
 
 void DoorRenderComponent::Receive(Event* message)
 {
-    if ((message->m_type == MessageType::OPEN_DOOR) && (m_doorState == CLOSED) && IsPlayerWithinBounds())
+    if ((message->m_type == MessageType::OPEN_DOOR) && (m_doorState == CLOSED) && (IsPlayerWithinBounds() || m_used))
     {
         m_doorState = OPENING;
         m_indexChangeRate = 0.0f;

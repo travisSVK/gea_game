@@ -44,3 +44,8 @@ void MovementComponent::SetPosition(const glm::dvec2& position)
 {
     m_position += position;
 }
+
+MovementType MovementComponent::GetMovement()
+{
+    return m_movement;
+}

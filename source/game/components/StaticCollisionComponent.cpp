@@ -11,10 +11,10 @@ std::vector<Event*> StaticCollisionComponent::Update(const std::vector<Collision
     std::vector<Event*> messages;
     for (auto collisionComponent : collisionComponents)
     {
-        ComponentType otherCollisionType;
         DirectionType collisionDirection;
         DirectionType otherCollisionDirection;
-        if (collisionComponent->CheckCollision(this, ComponentType::StaticCollision, otherCollisionType, otherCollisionDirection, collisionDirection))
+        if (((collisionComponent->GetComponentType() == ComponentType::CharacterCollision) || (collisionComponent->GetComponentType() == ComponentType::ProjectileCollision)) &&
+            collisionComponent->CheckCollision(this, otherCollisionDirection, collisionDirection))
         {
 
             CollisionHappened* message;
@@ -30,7 +30,7 @@ std::vector<Event*> StaticCollisionComponent::Update(const std::vector<Collision
             message->m_firstColEntity = m_entity;
             message->m_firstColComponentType = ComponentType::StaticCollision;
             message->m_secondColEntity = collisionComponent->GetEntity();
-            message->m_secondColComponentType = otherCollisionType;
+            message->m_secondColComponentType = collisionComponent->GetComponentType();
             message->m_firstColDirection = collisionDirection;
             message->m_secondColDirection = otherCollisionDirection;
             message->m_type = MessageType::COLLISION_HAPPENED;
@@ -40,12 +40,11 @@ std::vector<Event*> StaticCollisionComponent::Update(const std::vector<Collision
     return messages;
 }
 
-bool StaticCollisionComponent::CheckCollision(CollisionComponent* collisionComponent, ComponentType collisionType, ComponentType& returnCollisionType, DirectionType& collisionDirection, DirectionType& collisionDirectionOther)
+bool StaticCollisionComponent::CheckCollision(CollisionComponent* collisionComponent, DirectionType& collisionDirection, DirectionType& collisionDirectionOther)
 {
-    if ((collisionType == ComponentType::CharacterCollision) || (collisionType == ComponentType::ProjectileCollision))
+    if ((collisionComponent->GetComponentType() == ComponentType::CharacterCollision) || (collisionComponent->GetComponentType() == ComponentType::ProjectileCollision))
     {
-        returnCollisionType = ComponentType::StaticCollision;
-        return CollisionComponent::CheckCollision(collisionComponent, collisionType, returnCollisionType, collisionDirection, collisionDirectionOther);
+        return CollisionComponent::CheckCollision(collisionComponent, collisionDirection, collisionDirectionOther);
     }
     return false;
 }

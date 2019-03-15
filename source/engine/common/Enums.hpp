@@ -6,6 +6,7 @@ enum ComponentType
     SpritesheetRender = 1,
     StaticRender = 2,
     DoorRender = 3,
+    EnemyDoorRender = 4,
     PlayerMovement = 5,
     AIMovement = 6,
     ProjectileMovement = 7,
@@ -37,7 +38,9 @@ enum MovementType
     DESTROYED_RIGHT = 6,
     UP = 7,
     DOWN = 8,
-    CAR_DRIVE = 9
+    CROUCHING_LEFT = 9,
+    CROUCHING_RIGHT = 10,
+    CAR_DRIVE = 11
 };
 
 enum DoorState
@@ -71,5 +74,8 @@ enum MessageType
     DRIVE_CAR,
     OPEN_DOOR,
     PLAYER_HIDDEN,
+    SPAWN_ENEMY,
+    CREATE_ENEMY,
+    CROUCH,
     EXIT_GAME
 };

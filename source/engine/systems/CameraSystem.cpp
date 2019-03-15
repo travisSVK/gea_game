@@ -1,21 +1,15 @@
 #include "CameraSystem.hpp"
 #include "../common/Event.hpp"
 #include "../components/CameraComponent.hpp"
-#include <iostream>
-#include <chrono>
 
 CameraSystem::CameraSystem(EventHandler<CameraSystem, CameraComponent>* eventHandler) : m_eventHandler(eventHandler)
 {
     m_components.reserve(2);
     m_componentLookUp.reserve(2);
-    m_counter = 0;
-    m_elapsed = 0.0;
 }
 
 void CameraSystem::Update()
 {
-    /*m_counter++;
-    auto start = std::chrono::high_resolution_clock::now();*/
     if (m_enabled)
     {
         for (auto component : m_components)
@@ -48,17 +42,7 @@ void CameraSystem::Update()
                 }
             }*/
         }
-    }   
-    //auto finish = std::chrono::high_resolution_clock::now();
-    //std::chrono::duration<double> elapsed = finish - start;
-    //m_elapsed += elapsed.count();
-    //if (m_counter == 100)
-    //{
-    //    //std::cout << "CameraSystem: " << m_elapsed << std::endl;
-    //    m_elapsed = 0;
-    //    m_counter = 0;
-    //}
-    
+    }
 }
 
 void CameraSystem::Receive(Event* event)

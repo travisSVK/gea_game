@@ -63,6 +63,4 @@ private:
     std::unordered_map<EntityManager::Entity, MovementComponent*> m_componentLookUp;
     EventHandler<MovementSystem, MovementComponent>* m_eventHandler;
     std::unordered_map<ComponentType, IBaseConstructor<MovementComponent>*> m_baseConstructors;
-    unsigned int m_counter;
-    double m_elapsed;
 };

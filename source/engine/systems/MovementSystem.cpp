@@ -1,21 +1,15 @@
 #include "MovementSystem.hpp"
 #include "../common/Event.hpp"
 #include "../components/MovementComponent.hpp"
-#include <chrono>
-#include <iostream>
 
 MovementSystem::MovementSystem(EventHandler<MovementSystem, MovementComponent>* eventHandler) : m_eventHandler(eventHandler), System()
 {
     m_components.reserve(100);
     m_componentLookUp.reserve(100);
-    m_counter = 0;
-    m_elapsed = 0.0;
 }
 
 void MovementSystem::Update()
 {
-    //m_counter++;
-    
     if (m_enabled)
     {
         for (auto component : m_components)
@@ -26,11 +20,7 @@ void MovementSystem::Update()
                 for (auto event : events)
                 {
                     event->m_entity = component->GetEntity();
-                    //auto start = std::chrono::high_resolution_clock::now();
                     Notify(event);
-                    //auto finish = std::chrono::high_resolution_clock::now();
-                    //std::chrono::duration<double> elapsed = finish - start;
-                    //m_elapsed += elapsed.count();
                     EventPool::AddEvent(event);
                     //delete event;
                 }
@@ -53,12 +43,6 @@ void MovementSystem::Update()
             }*/
         }
     }
-    /*if (m_counter == 100)
-    {
-        std::cout << "MovementSystem: " << m_elapsed << std::endl;
-        m_elapsed = 0;
-        m_counter = 0;
-    }*/
 }
 
 

@@ -64,6 +64,4 @@ private:
     std::unordered_map<EntityManager::Entity, InputComponent*> m_componentLookUp;
     EventHandler<InputSystem, InputComponent>* m_eventHandler;
     std::unordered_map<ComponentType, IBaseConstructor<InputComponent>*> m_baseConstructors;
-    unsigned int m_counter;
-    double m_elapsed;
 };

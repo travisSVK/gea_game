@@ -28,4 +28,6 @@ private:
     DoorState m_doorState;
     EntityManager::Entity m_playerEntity;
     glm::dvec2 m_playerPosition;
+    std::string m_path;
+    bool m_used;
 };

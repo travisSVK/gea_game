@@ -1,21 +1,15 @@
 #include "InputSystem.hpp"
 #include "../common/Event.hpp"
 #include "../components/InputComponent.hpp"
-#include <chrono>
-#include <iostream>
 
 InputSystem::InputSystem(EventHandler<InputSystem, InputComponent>* eventHandler) : m_eventHandler(eventHandler), System()
 {
     m_components.reserve(5);
     m_componentLookUp.reserve(5);
-    m_counter = 0;
-    m_elapsed = 0.0;
 }
 
 void InputSystem::Update()
 {
-    /*m_counter++;
-    auto start = std::chrono::high_resolution_clock::now();*/
     if (m_enabled)
     {
         SDL_Event event;
@@ -53,15 +47,6 @@ void InputSystem::Update()
             }
         }
     }
-    /*auto finish = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed = finish - start;
-    m_elapsed += elapsed.count();
-    if (m_counter == 100)
-    {
-        std::cout << "InputSystem: " << m_elapsed << std::endl;
-        m_elapsed = 0;
-        m_counter = 0;
-    }*/
 }
 
 

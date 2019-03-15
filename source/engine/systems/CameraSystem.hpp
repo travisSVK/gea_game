@@ -64,6 +64,4 @@ private:
     std::unordered_map<EntityManager::Entity, CameraComponent*> m_componentLookUp;
     EventHandler<CameraSystem, CameraComponent>* m_eventHandler;
     std::unordered_map<ComponentType, IBaseConstructor<CameraComponent>*> m_baseConstructors;
-    unsigned int m_counter;
-    double m_elapsed;
 };

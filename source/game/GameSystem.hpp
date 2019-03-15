@@ -5,6 +5,7 @@
 #include "SDL_ttf.h"
 #include <unordered_map>
 #include "SDL_mixer.h"
+#include "GLM/glm.hpp"
 
 class RenderSystem;
 class CollisionSystem;
@@ -47,6 +48,8 @@ private:
     std::unordered_map<SystemType, System*> m_systemsMap;
     LevelNumbers m_levelNumbers;
     EntityManager::Entity m_playerEntity;
+    glm::dvec2 m_playerPosition;
+    glm::dvec2 m_playerLastPosition;
     EntityManager::Entity m_carEntity;
     EntityManager::Entity m_gameEntity;
     Mix_Music* m_backgroundMusic;
@@ -60,14 +63,11 @@ private:
     bool m_drawScore;
     bool m_gameOver;
     bool m_gameStart;
+    bool m_playerTemporaryDisabled;
+    bool m_bonusScore;
     unsigned int m_playerLives;
+    unsigned int m_buildingLevel;
     float m_playerHorizontalPosition;
     SDL_Texture* m_hudTexture;
     SDL_Texture* m_hudLives;
-
-    //performance test
-    unsigned int m_counterRender;
-    double m_elapsedRender;
-    unsigned int m_counterCollision;
-    double m_elapsedCollision;
 };

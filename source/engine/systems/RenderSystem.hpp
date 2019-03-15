@@ -24,16 +24,33 @@ public:
     {
         RenderComponent* newComponent = nullptr;
         bool isNew = true;
-        for (auto component : m_components)
+        if (componentType == StaticRender)
         {
-            if ((component->GetComponentType() == componentType) && !component->IsEnabled())
+            for (auto component : m_staticComponents)
             {
-                newComponent = component;
-                m_componentLookUp.erase(newComponent->GetEntity());
-                isNew = false;
-                break;
+                if ((component->GetComponentType() == componentType) && !component->IsEnabled())
+                {
+                    newComponent = component;
+                    m_componentLookUp.erase(newComponent->GetEntity());
+                    isNew = false;
+                    break;
+                }
             }
         }
+        else
+        {
+            for (auto component : m_components)
+            {
+                if ((component->GetComponentType() == componentType) && !component->IsEnabled())
+                {
+                    newComponent = component;
+                    m_componentLookUp.erase(newComponent->GetEntity());
+                    isNew = false;
+                    break;
+                }
+            }
+        }
+        
         /*if (m_disabledComponents[componentType].size() > 0)
         {
             newComponent = m_disabledComponents[componentType].front();
@@ -68,6 +85,4 @@ private:
     std::unordered_map<EntityManager::Entity, RenderComponent*> m_componentLookUp;
     EventHandler<RenderSystem, RenderComponent>* m_eventHandler;
     std::unordered_map<ComponentType, IBaseConstructor<RenderComponent>*> m_baseConstructors;
-    unsigned int m_counter;
-    double m_elapsed;
 };

@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
 
         float elapsedTime = game.GetElapsedTime();
         int sleepTime = (1000 / FPS) - (elapsedTime - startTime);
-        SDL_Log("%d\n", sleepTime);
+        //SDL_Log("%d\n", sleepTime);
         if (sleepTime > 0)
         {
             SDL_Delay(sleepTime);

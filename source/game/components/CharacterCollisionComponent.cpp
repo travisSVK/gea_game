@@ -5,72 +5,90 @@ void CharacterCollisionComponent::Create(EntityManager::Entity entity, const glm
 {
     CollisionComponent::Create(entity, position, size);
     m_isPlayerEntity = isPlayerEntity;
+    m_temporaryDisabled = false;
+    m_crouch = false;
 }
 
 std::vector<Event*> CharacterCollisionComponent::Update(const std::vector<CollisionComponent*>& collisionComponents)
 {
     std::vector<Event*> messages;
-    for (auto collisionComponent : collisionComponents)
+    if (!m_temporaryDisabled)
     {
-        DirectionType collisionDirection;
-        DirectionType otherCollisionDirection;
-        ComponentType otherCollisionType;
-        if (collisionComponent->CheckCollision(this, ComponentType::CharacterCollision, otherCollisionType, otherCollisionDirection, collisionDirection))
+        for (auto collisionComponent : collisionComponents)
         {
-            if ((otherCollisionType == ComponentType::ProjectileCollision) && (!m_isPlayerEntity))
+            double ytmp = m_position.y;
+            // check with previous y value for player (because it is temporarily changed due to gravity collision check)
+            if (m_isPlayerEntity && (collisionComponent->GetComponentType() == ComponentType::ProjectileCollision))
             {
-                m_enabled = false;
+                m_position.y = m_lastPosition.y;
             }
-            else if (otherCollisionType == ComponentType::StaticCollision)
+            DirectionType collisionDirection;
+            DirectionType otherCollisionDirection;
+            if (collisionComponent->CheckCollision(this, otherCollisionDirection, collisionDirection))
             {
-                if ((otherCollisionDirection == DirectionType::DIR_LEFT) || (otherCollisionDirection == DirectionType::DIR_RIGHT))
+                if ((collisionComponent->GetComponentType() == ComponentType::ProjectileCollision) && (!m_isPlayerEntity))
                 {
-                    m_position.x = m_lastPosition.x;
+                    m_enabled = false;
                 }
-                else if (otherCollisionDirection == DirectionType::DIR_UP)
+                else if (collisionComponent->GetComponentType() == ComponentType::StaticCollision)
                 {
-                    m_position.y = m_lastPosition.y;
+                    if ((otherCollisionDirection == DirectionType::DIR_LEFT) || (otherCollisionDirection == DirectionType::DIR_RIGHT))
+                    {
+                        m_position.x = m_lastPosition.x;
+                    }
+                    else if (otherCollisionDirection == DirectionType::DIR_UP)
+                    {
+                        m_position.y = m_lastPosition.y;
+                    }
                 }
+                CollisionHappened* message;
+                Event* event = EventPool::GetEvent(COLLISION_HAPPENED);
+                if (event)
+                {
+                    message = event->GetMessage<CollisionHappened>();
+                }
+                else
+                {
+                    message = new CollisionHappened();
+                }
+                message->m_firstColEntity = m_entity;
+                message->m_firstColComponentType = ComponentType::CharacterCollision;
+                message->m_secondColEntity = collisionComponent->GetEntity();
+                message->m_secondColComponentType = collisionComponent->GetComponentType();
+                message->m_firstColDirection = collisionDirection;
+                message->m_secondColDirection = otherCollisionDirection;
+                message->m_type = MessageType::COLLISION_HAPPENED;
+                messages.push_back(message);
             }
-            CollisionHappened* message;
-            Event* event = EventPool::GetEvent(COLLISION_HAPPENED);
-            if (event)
-            {
-                message = event->GetMessage<CollisionHappened>();
-            }
-            else
-            {
-                message = new CollisionHappened();
-            }
-            message->m_firstColEntity = m_entity;
-            message->m_firstColComponentType = ComponentType::CharacterCollision;
-            message->m_secondColEntity = collisionComponent->GetEntity();
-            message->m_secondColComponentType = otherCollisionType;
-            message->m_firstColDirection = collisionDirection;
-            message->m_secondColDirection = otherCollisionDirection;
-            message->m_type = MessageType::COLLISION_HAPPENED;
-            messages.push_back(message);
+            // set back the temporarily gravity changed y value in case it was set for projectile test
+            m_position.y = ytmp;
         }
-    }
-    if (m_isPlayerEntity)
-    {
-        m_position.y = m_lastPosition.y;
+        if (m_isPlayerEntity)
+        {
+            // set back the temporarily gravity changed value to previous one (if there wasnt a collision, camera component will move the player)
+            m_position.y = m_lastPosition.y;
+        }
     }
     return messages;
 }
 
-bool CharacterCollisionComponent::CheckCollision(CollisionComponent* collisionComponent, ComponentType collisionType, ComponentType& returnCollisionType, DirectionType& collisionDirection, DirectionType& collisionDirectionOther)
+bool CharacterCollisionComponent::CheckCollision(CollisionComponent* collisionComponent, DirectionType& collisionDirection, DirectionType& collisionDirectionOther)
 {
-    if (m_enabled && ((collisionType == ComponentType::StaticCollision) || (collisionType == ComponentType::ProjectileCollision)))
+    if (!m_temporaryDisabled && m_enabled && ((collisionComponent->GetComponentType() == ComponentType::StaticCollision) || (collisionComponent->GetComponentType() == ComponentType::ProjectileCollision)))
     {
-        returnCollisionType = ComponentType::CharacterCollision;
-        if (CollisionComponent::CheckCollision(collisionComponent, collisionType, returnCollisionType, collisionDirection, collisionDirectionOther))
+        double ytmp = m_position.y;
+        // check with previous y value for player (because it is temporarily changed due to gravity collision check)
+        if (m_isPlayerEntity && (collisionComponent->GetComponentType() == ComponentType::ProjectileCollision))
         {
-            if ((collisionType == ComponentType::ProjectileCollision) && (!m_isPlayerEntity))
+            m_position.y = m_lastPosition.y;
+        }
+        if (CollisionComponent::CheckCollision(collisionComponent, collisionDirection, collisionDirectionOther))
+        {
+            if ((collisionComponent->GetComponentType() == ComponentType::ProjectileCollision) && (!m_isPlayerEntity))
             {
                 m_enabled = false;
             }
-            else if (collisionType == ComponentType::StaticCollision)
+            else if (collisionComponent->GetComponentType() == ComponentType::StaticCollision)
             {
                 if ((collisionDirectionOther == DirectionType::DIR_LEFT) || (collisionDirectionOther == DirectionType::DIR_RIGHT))
                 {
@@ -81,14 +99,46 @@ bool CharacterCollisionComponent::CheckCollision(CollisionComponent* collisionCo
                     m_position.y = m_lastPosition.y;
                 }
             }
+            // set back the temporarily gravity changed y value in case it was set for projectile test
+            m_position.y = ytmp;
             return true;
         }
+        // set back the temporarily gravity changed y value in case it was set for projectile test
+        m_position.y = ytmp;
     }
     return false;
 }
 
 void CharacterCollisionComponent::Receive(Event* message)
 {
+    if (message->m_type == MessageType::PLAYER_HIDDEN)
+    {
+        if (m_temporaryDisabled)
+        {
+            m_temporaryDisabled = false;
+        }
+        else
+        {
+            m_temporaryDisabled = true;
+        }
+    }
+    else if (message->m_type == MessageType::CROUCH)
+    {
+        if (m_crouch)
+        {
+            m_crouch = false;
+            m_size.y = 40;
+            m_position.y -= 10;
+            m_lastPosition.y -= 10;
+        }
+        else
+        {
+            m_crouch = true;
+            m_size.y = 20;
+            m_position.y += 10;
+            m_lastPosition.y += 10;
+        }
+    }
 }
 
 ComponentType CharacterCollisionComponent::GetComponentType()

@@ -64,6 +64,4 @@ private:
     std::unordered_map<EntityManager::Entity, CollisionComponent*> m_componentLookUp;
     EventHandler<CollisionSystem, CollisionComponent>* m_eventHandler;
     std::unordered_map<ComponentType, IBaseConstructor<CollisionComponent>*> m_baseConstructors;
-    unsigned int m_counter;
-    double m_elapsed;
 };

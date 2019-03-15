@@ -27,4 +27,5 @@ protected:
     InputHandler* m_inputHandler;
     std::unordered_map<SDL_Keycode, bool> m_keyCodes;
     bool m_enabled;
+    bool m_temporaryDisabled;
 };

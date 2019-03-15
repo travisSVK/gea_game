@@ -9,7 +9,7 @@ void CollisionComponent::Create(EntityManager::Entity entity, const glm::dvec2& 
     m_lastPosition = m_position;
 }
 
-bool CollisionComponent::CheckCollision(CollisionComponent* collisionComponent, ComponentType collisionType, ComponentType& returnCollisionType, DirectionType& collisionDirection, DirectionType& collisionDirectionOther)
+bool CollisionComponent::CheckCollision(CollisionComponent* collisionComponent, DirectionType& collisionDirection, DirectionType& collisionDirectionOther)
 {
     glm::dvec2 position = collisionComponent->GetPosition();
     glm::ivec2 size = collisionComponent->GetSize();
@@ -59,11 +59,6 @@ void CollisionComponent::SetPosition(const glm::dvec2& position)
 
 void CollisionComponent::SetCenterPosition(const glm::dvec2& position)
 {
-    if (GetComponentType() == StaticCollision)
-    {
-        m_lastPosition = m_position;
-        m_lastPosition.x += 0;
-    }
     m_lastPosition = m_position;
     m_position += position;
 }

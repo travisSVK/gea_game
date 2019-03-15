@@ -2,22 +2,16 @@
 #include "../common/Event.hpp"
 #include "../components/RenderComponent.hpp"
 #include "../managers/RenderManager.hpp"
-#include <chrono>
-#include <iostream>
 
 RenderSystem::RenderSystem(EventHandler<RenderSystem, RenderComponent>* eventHandler) : m_eventHandler(eventHandler), System()
 {
     m_components.reserve(1000);
     m_componentLookUp.reserve(1000);
     //m_disabledComponents.reserve(100);
-    m_counter = 0;
-    m_elapsed = 0.0;
 }
 
 void RenderSystem::Update()
 {
-    /*m_counter++;
-    auto start = std::chrono::high_resolution_clock::now();*/
     if (m_enabled)
     {
         for (auto component : m_staticComponents)
@@ -37,7 +31,6 @@ void RenderSystem::Update()
                     event->m_entity = component->GetEntity();
                     Notify(event);
                     EventPool::AddEvent(event);
-                    //delete event;
                 }
             }
             /*if (!component->IsEnabled())
@@ -58,34 +51,14 @@ void RenderSystem::Update()
             }*/
         }
     }
-    //auto finish = std::chrono::high_resolution_clock::now();
-    //std::chrono::duration<double> elapsed = finish - start;
-    //m_elapsed += elapsed.count();
-    //if (m_counter == 100)
-    //{
-    //    //std::cout << "RenderSystem: " << m_elapsed << std::endl;
-    //    m_elapsed = 0;
-    //    m_counter = 0;
-    //}
 }
 
 void RenderSystem::Receive(Event* event)
 {
-    /*m_counter++;
-    auto start = std::chrono::high_resolution_clock::now();*/
     if (m_enabled)
     {
         m_eventHandler->HandleEvent(this, m_componentLookUp, event);
     }
-    /*auto finish = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed = finish - start;
-    m_elapsed += elapsed.count();
-    if (m_counter == 6300)
-    {
-        std::cout << "RenderSystem: " << m_elapsed << std::endl;
-        m_elapsed = 0;
-        m_counter = 0;
-    }*/
 }
 
 void RenderSystem::DisableComponents(int excludeEntity)

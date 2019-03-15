@@ -50,6 +50,10 @@ public:
     EntityManager::Entity m_newEntity;
 };
 
+class ENGINE_API Crouch : public Event
+{
+};
+
 class ENGINE_API CollisionHappened : public Event
 {
 public:
@@ -107,6 +111,21 @@ class ENGINE_API OpenDoor : public Event
 
 class ENGINE_API PlayerHidden : public Event
 {
+public:
+    EntityManager::Entity m_playerEntity;
+};
+
+class ENGINE_API SpawnEnemy : public Event
+{
+public:
+    glm::dvec2 m_position;
+};
+
+class ENGINE_API CreateEnemy : public Event
+{
+public:
+    EntityManager::Entity m_newEntity;
+    glm::dvec2 m_position;
 };
 
 class ENGINE_API ExitGame : public Event

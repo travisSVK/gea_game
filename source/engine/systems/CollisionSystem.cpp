@@ -2,21 +2,15 @@
 #include "../common/Event.hpp"
 #include "../components/CollisionComponent.hpp"
 #include <algorithm>
-#include <chrono>
-#include <iostream>
 
 CollisionSystem::CollisionSystem(EventHandler<CollisionSystem, CollisionComponent>* eventHandler) : m_eventHandler(eventHandler)
 {
     m_components.reserve(1000);
     m_componentLookUp.reserve(1000);
-    m_counter = 0;
-    m_elapsed = 0.0;
 }
 
 void CollisionSystem::Update()
 {
-    /*m_counter++;
-    auto start = std::chrono::high_resolution_clock::now();*/
     if (m_enabled)
     {
         std::vector<CollisionComponent *> components;
@@ -56,15 +50,6 @@ void CollisionSystem::Update()
             }*/
         }
     }
-    //auto finish = std::chrono::high_resolution_clock::now();
-    //std::chrono::duration<double> elapsed = finish - start;
-    //m_elapsed += elapsed.count();
-    //if (m_counter == 100)
-    //{
-    //    //std::cout << "CollisionSystem: " << m_elapsed << std::endl;
-    //    m_elapsed = 0;
-    //    m_counter = 0;
-    //}
 }
 
 void CollisionSystem::Receive(Event* event)
