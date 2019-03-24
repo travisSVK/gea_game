@@ -1,42 +1,48 @@
 #include "HorizontalCameraComponent.hpp"
 #include "common/Event.hpp"
 
-void HorizontalCameraComponent::Create(EntityManager::Entity entity, const glm::dvec2& position, const std::vector<EntityManager::Entity>& excludedEntities)
+namespace game
 {
-    CameraComponent::Create(entity, position, excludedEntities);
-}
-
-Event* HorizontalCameraComponent::Update()
-{
-    MoveUp* moveUp = nullptr;
-    if (m_positionChange.y != 0.0)
+    namespace components
     {
-        Event* event = EventPool::GetEvent(MOVE_UP);
-        if (event)
+        void HorizontalCameraComponent::Create(engine::managers::EntityManager::Entity entity, const glm::dvec2& position, const std::vector<engine::managers::EntityManager::Entity>& excludedEntities)
         {
-            moveUp = event->GetMessage<MoveUp>();
+            CameraComponent::Create(entity, position, excludedEntities);
         }
-        else
+
+        engine::common::Event* HorizontalCameraComponent::Update()
         {
-            moveUp = new MoveUp();
+            engine::common::MoveUp* moveUp = nullptr;
+            if (m_positionChange.y != 0.0)
+            {
+                engine::common::Event* event = engine::common::EventPool::GetEvent(MOVE_UP);
+                if (event)
+                {
+                    moveUp = event->GetMessage<engine::common::MoveUp>();
+                }
+                else
+                {
+                    moveUp = new engine::common::MoveUp();
+                }
+                moveUp->m_type = MessageType::MOVE_UP;
+                moveUp->m_moveLength = m_positionChange.y;
+                moveUp->m_excludedEntities = m_excludedEntities;
+                m_positionChange = glm::dvec2(0.0, 0.0);
+            }
+            return moveUp;
         }
-        moveUp->m_type = MessageType::MOVE_UP;
-        moveUp->m_moveLength = m_positionChange.y;
-        moveUp->m_excludedEntities = m_excludedEntities;
-        m_positionChange = glm::dvec2(0.0, 0.0);
+
+        void HorizontalCameraComponent::Receive(engine::common::Event* message)
+        {
+            CameraComponent::Receive(message);
+        }
+
+        ComponentType HorizontalCameraComponent::GetComponentType()
+        {
+            return HorizontalCamera;
+        }
+
+        void HorizontalCameraComponent::Destroy()
+        {}
     }
-    return moveUp;
 }
-
-void HorizontalCameraComponent::Receive(Event* message)
-{
-    CameraComponent::Receive(message);
-}
-
-ComponentType HorizontalCameraComponent::GetComponentType()
-{
-    return HorizontalCamera;
-}
-
-void HorizontalCameraComponent::Destroy()
-{}

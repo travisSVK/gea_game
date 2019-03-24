@@ -3,7 +3,7 @@
 const unsigned int FPS = 60;
 int main(int argc, char* argv[])
 {
-    GameSystem game;
+    game::GameSystem game;
     if (!game.Init(800, 600))
     {
         return 1;

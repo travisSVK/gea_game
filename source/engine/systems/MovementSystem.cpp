@@ -2,84 +2,71 @@
 #include "../common/Event.hpp"
 #include "../components/MovementComponent.hpp"
 
-MovementSystem::MovementSystem(EventHandler<MovementSystem, MovementComponent>* eventHandler) : m_eventHandler(eventHandler), System()
+namespace engine
 {
-    m_components.reserve(100);
-    m_componentLookUp.reserve(100);
-}
-
-void MovementSystem::Update()
-{
-    if (m_enabled)
+    namespace systems
     {
-        for (auto component : m_components)
+        MovementSystem::MovementSystem(handlers::EventHandler<MovementSystem, components::MovementComponent>* eventHandler) : m_eventHandler(eventHandler), System()
         {
-            if (component->IsEnabled())
+            m_components.reserve(100);
+            m_componentLookUp.reserve(100);
+        }
+
+        void MovementSystem::Update()
+        {
+            if (m_enabled)
             {
-                std::vector<Event*> events = component->Update();
-                for (auto event : events)
+                for (auto component : m_components)
                 {
-                    event->m_entity = component->GetEntity();
-                    Notify(event);
-                    EventPool::AddEvent(event);
-                    //delete event;
-                }
-            }
-            /*if (!component->IsEnabled())
-            {
-                bool isDisabled = false;
-                for (auto disabledComponent : m_disabledComponents[component->GetComponentType()])
-                {
-                    if (disabledComponent->GetEntity() == component->GetEntity())
+                    if (component->IsEnabled())
                     {
-                        isDisabled = true;
-                        break;
+                        std::vector<common::Event*> events = component->Update();
+                        for (auto event : events)
+                        {
+                            event->m_entity = component->GetEntity();
+                            Notify(event);
+                            common::EventPool::AddEvent(event);
+                        }
                     }
                 }
-                if (!isDisabled)
+            }
+        }
+
+
+        void MovementSystem::Receive(common::Event* event)
+        {
+            if (m_enabled)
+            {
+                m_eventHandler->HandleEvent(this, m_componentLookUp, event);
+            }
+        }
+
+        void MovementSystem::DisableComponents(int excludeEntity)
+        {
+            for (auto component : m_components)
+            {
+                if ((component->GetEntity() != excludeEntity) && (component->IsEnabled()))
                 {
-                    m_disabledComponents[component->GetComponentType()].push_back(component);
+                    component->Disable();                }
+                else
+                {
+                    m_enabled = true;
                 }
-            }*/
+            }
         }
-    }
-}
 
-
-void MovementSystem::Receive(Event* event)
-{
-    if (m_enabled)
-    {
-        m_eventHandler->HandleEvent(this, m_componentLookUp, event);
-    }
-}
-
-void MovementSystem::DisableComponents(int excludeEntity)
-{
-    for (auto component : m_components)
-    {
-        if ((component->GetEntity() != excludeEntity) && (component->IsEnabled()))
+        void MovementSystem::Destroy()
         {
-            component->Disable();
-            //m_disabledComponents[component->GetComponentType()].push_back(component);
+            for (auto component : m_components)
+            {
+                component->Destroy();
+                delete component;
+            }
+            for (const auto& constructor : m_baseConstructors)
+            {
+                delete constructor.second;
+            }
+            delete m_eventHandler;
         }
-        else
-        {
-            m_enabled = true;
-        }
     }
-}
-
-void MovementSystem::Destroy()
-{
-    for (auto component : m_components)
-    {
-        component->Destroy();
-        delete component;
-    }
-    for (const auto& constructor : m_baseConstructors)
-    {
-        delete constructor.second;
-    }
-    delete m_eventHandler;
 }

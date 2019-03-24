@@ -1,15 +1,21 @@
 #pragma once
 #include "../EngineAPI.hpp"
 
-class ENGINE_API EntityManager
+namespace engine
 {
-public:
-    typedef unsigned int Entity;
+    namespace managers
+    {
+        class ENGINE_API EntityManager
+        {
+        public:
+            typedef unsigned int Entity;
 
-    EntityManager();
-    const Entity CreateEntity();
+            EntityManager();
+            const Entity CreateEntity();
 
-private:
+        private:
 
-    Entity m_currentId;
-};
+            Entity m_currentId;
+        };
+    }
+}

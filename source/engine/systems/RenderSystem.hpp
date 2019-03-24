@@ -3,86 +3,88 @@
 #include "../handlers/EventHandler.hpp"
 #include "../managers/EntityManager.hpp"
 
-class RenderComponent;
-class ENGINE_API RenderSystem : public System
+namespace engine
 {
-public:
-
-    RenderSystem(EventHandler<RenderSystem, RenderComponent>* eventHandler);
-    virtual void Update() override;
-    virtual void Destroy() override;
-    void Receive(Event* event);
-
-    template<typename ...Params>
-    void RegisterComponent(ComponentType componentType, std::function<RenderComponent*(RenderComponent*, Params...)> constructor)
+    namespace components
     {
-        m_baseConstructors[componentType] = new BaseConstructor<RenderComponent, Params...>(constructor);
+        class RenderComponent;
     }
-
-    template<typename ...Params>
-    void CreateComponent(ComponentType componentType, Params&&... params)
+    namespace systems
     {
-        RenderComponent* newComponent = nullptr;
-        bool isNew = true;
-        if (componentType == StaticRender)
+        class ENGINE_API RenderSystem : public System
         {
-            for (auto component : m_staticComponents)
+        public:
+
+            RenderSystem(handlers::EventHandler<RenderSystem, components::RenderComponent>* eventHandler);
+            virtual void Update() override;
+            virtual void Destroy() override;
+            void Receive(common::Event* event);
+
+            template<typename ...Params>
+            void RegisterComponent(ComponentType componentType, std::function<components::RenderComponent*(components::RenderComponent*, Params...)> constructor)
             {
-                if ((component->GetComponentType() == componentType) && !component->IsEnabled())
-                {
-                    newComponent = component;
-                    m_componentLookUp.erase(newComponent->GetEntity());
-                    isNew = false;
-                    break;
-                }
+                m_baseConstructors[componentType] = new common::BaseConstructor<components::RenderComponent, Params...>(constructor);
             }
-        }
-        else
-        {
-            for (auto component : m_components)
+
+            template<typename ...Params>
+            void CreateComponent(ComponentType componentType, Params&&... params)
             {
-                if ((component->GetComponentType() == componentType) && !component->IsEnabled())
-                {
-                    newComponent = component;
-                    m_componentLookUp.erase(newComponent->GetEntity());
-                    isNew = false;
-                    break;
-                }
-            }
-        }
-        
-        /*if (m_disabledComponents[componentType].size() > 0)
-        {
-            newComponent = m_disabledComponents[componentType].front();
-            m_disabledComponents[componentType].erase(m_disabledComponents[componentType].begin());
-            m_componentLookUp.erase(newComponent->GetEntity());
-            isNew = false;
-        }*/
-        RenderComponent* component = m_baseConstructors[componentType]->Construct<BaseConstructor<RenderComponent, Params...>>(newComponent, std::forward<Params>(params)...);
-        if (component)
-        {
-            if (isNew)
-            {
+                components::RenderComponent* newComponent = nullptr;
+                bool isNew = true;
                 if (componentType == StaticRender)
                 {
-                    m_staticComponents.push_back(component);
+                    for (auto component : m_staticComponents)
+                    {
+                        if ((component->GetComponentType() == componentType) && !component->IsEnabled())
+                        {
+                            newComponent = component;
+                            m_componentLookUp.erase(newComponent->GetEntity());
+                            isNew = false;
+                            break;
+                        }
+                    }
                 }
                 else
                 {
-                    m_components.push_back(component);
+                    for (auto component : m_components)
+                    {
+                        if ((component->GetComponentType() == componentType) && !component->IsEnabled())
+                        {
+                            newComponent = component;
+                            m_componentLookUp.erase(newComponent->GetEntity());
+                            isNew = false;
+                            break;
+                        }
+                    }
+                }
+
+                components::RenderComponent* component = m_baseConstructors[componentType]->Construct<common::BaseConstructor<components::RenderComponent, Params...>>(newComponent, std::forward<Params>(params)...);
+                if (component)
+                {
+                    if (isNew)
+                    {
+                        if (componentType == StaticRender)
+                        {
+                            m_staticComponents.push_back(component);
+                        }
+                        else
+                        {
+                            m_components.push_back(component);
+                        }
+                    }
+                    m_componentLookUp[component->GetEntity()] = component;
                 }
             }
-            m_componentLookUp[component->GetEntity()] = component;
-        }
+            virtual void DisableComponents(int excludeEntity);
+
+        private:
+
+            std::vector<components::RenderComponent*> m_components;
+            std::vector<components::RenderComponent*> m_staticComponents;
+            std::unordered_map<managers::EntityManager::Entity, components::RenderComponent*> m_componentLookUp;
+            handlers::EventHandler<RenderSystem, components::RenderComponent>* m_eventHandler;
+            std::unordered_map<ComponentType, common::IBaseConstructor<components::RenderComponent>*> m_baseConstructors;
+        };
+
     }
-    virtual void DisableComponents(int excludeEntity);
-
-private:
-
-    std::vector<RenderComponent*> m_components;
-    std::vector<RenderComponent*> m_staticComponents;
-    std::unordered_map<ComponentType, std::vector<RenderComponent*>> m_disabledComponents;
-    std::unordered_map<EntityManager::Entity, RenderComponent*> m_componentLookUp;
-    EventHandler<RenderSystem, RenderComponent>* m_eventHandler;
-    std::unordered_map<ComponentType, IBaseConstructor<RenderComponent>*> m_baseConstructors;
-};
+}

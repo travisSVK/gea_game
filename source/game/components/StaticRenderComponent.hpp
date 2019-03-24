@@ -4,21 +4,28 @@
 
 struct SDL_Renderer;
 struct SDL_Texture;
-class StaticRenderComponent : public RenderComponent
+
+namespace game
 {
-public:
-    StaticRenderComponent() = default;
-    virtual void Create(EntityManager::Entity entity, SDL_Renderer* renderer, const std::string& path, const glm::dvec2& position, const glm::ivec2& size);
-    virtual Event* Update() override;
-    virtual void Destroy() override;
-    virtual void Receive(Event* message) override;
-    virtual ComponentType GetComponentType() override;
+    namespace components
+    {
+        class StaticRenderComponent : public engine::components::RenderComponent
+        {
+        public:
+            StaticRenderComponent() = default;
+            virtual void Create(engine::managers::EntityManager::Entity entity, SDL_Renderer* renderer, const std::string& path, const glm::dvec2& position, const glm::ivec2& size);
+            virtual engine::common::Event* Update() override;
+            virtual void Destroy() override;
+            virtual void Receive(engine::common::Event* message) override;
+            virtual ComponentType GetComponentType() override;
 
-protected:
-    virtual void Draw();
+        protected:
+            virtual void Draw();
 
-private:
-    SDL_Renderer* m_renderer;
-    SDL_Texture* m_texture;
-    glm::ivec2 m_size;
-};
+        private:
+            SDL_Renderer* m_renderer;
+            SDL_Texture* m_texture;
+            glm::ivec2 m_size;
+        };
+    }
+}

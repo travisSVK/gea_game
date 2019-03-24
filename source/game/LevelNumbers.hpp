@@ -1,12 +1,15 @@
 #pragma once
 #include <unordered_map>
 
-class LevelNumbers
+namespace game
 {
-public:
-    LevelNumbers();
-    std::vector<std::string> GetLevelNumbers(unsigned int level);
+    class LevelNumbers
+    {
+    public:
+        LevelNumbers();
+        std::vector<std::string> GetLevelNumbers(unsigned int level);
 
-private:
-    std::unordered_map<unsigned int, std::vector<std::string>> m_levelNumbers;
-};
+    private:
+        std::unordered_map<unsigned int, std::vector<std::string>> m_levelNumbers;
+    };
+}

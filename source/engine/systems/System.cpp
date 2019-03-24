@@ -1,31 +1,37 @@
 #include "System.hpp"
 
-System::System() : m_enabled(true)
+namespace engine
 {
-    m_subject = new Subject();
-}
+    namespace systems
+    {
+        System::System() : m_enabled(true)
+        {
+            m_subject = new common::Subject();
+        }
 
-void System::Disable(int excludeEntity)
-{
-    m_enabled = false;
-    DisableComponents(excludeEntity);
-}
+        void System::Disable(int excludeEntity)
+        {
+            m_enabled = false;
+            DisableComponents(excludeEntity);
+        }
 
-void System::Enable()
-{
-    m_enabled = true;
-}
+        void System::Enable()
+        {
+            m_enabled = true;
+        }
 
-void System::Subscribe(const OnNotifyCallback& receiveCallback)
-{
-    m_subject->addObserver(receiveCallback);
-}
-void System::Unsubscribe(const OnNotifyCallback& receiveCallback)
-{
-    m_subject->removeObserver(receiveCallback);
-}
+        void System::Subscribe(const common::OnNotifyCallback& receiveCallback)
+        {
+            m_subject->addObserver(receiveCallback);
+        }
+        void System::Unsubscribe(const common::OnNotifyCallback& receiveCallback)
+        {
+            m_subject->removeObserver(receiveCallback);
+        }
 
-void System::Notify(Event* event)
-{
-    m_subject->notify(event);
+        void System::Notify(common::Event* event)
+        {
+            m_subject->notify(event);
+        }
+    }
 }

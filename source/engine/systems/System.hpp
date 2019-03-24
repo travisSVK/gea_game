@@ -5,30 +5,35 @@
 #include "../common/Constructor.hpp"
 #include "../managers/EntityManager.hpp"
 
-
-class ENGINE_API System
+namespace engine
 {
-public:
+    namespace systems
+    {
+        class ENGINE_API System
+        {
+        public:
 
-    System();
-    virtual ~System() = default;
-    virtual void Update() = 0;
-    virtual void Destroy() = 0;
-    virtual void Subscribe(const OnNotifyCallback& receiveCallback);
-    virtual void Unsubscribe(const OnNotifyCallback& receiveCallback);
-    virtual void Receive(Event* event) = 0;
-    virtual void Disable(int excludeEntity);
-    virtual void Enable();
+            System();
+            virtual ~System() = default;
+            virtual void Update() = 0;
+            virtual void Destroy() = 0;
+            virtual void Subscribe(const common::OnNotifyCallback& receiveCallback);
+            virtual void Unsubscribe(const common::OnNotifyCallback& receiveCallback);
+            virtual void Receive(common::Event* event) = 0;
+            virtual void Disable(int excludeEntity);
+            virtual void Enable();
 
-protected:
+        protected:
 
-    virtual void Notify(Event* event);
-    virtual void DisableComponents(int excludeEntity) = 0;
+            virtual void Notify(common::Event* event);
+            virtual void DisableComponents(int excludeEntity) = 0;
 
-protected:
+        protected:
 
-    bool m_enabled;
+            bool m_enabled;
 
-private:
-    Subject* m_subject;
-};
+        private:
+            common::Subject* m_subject;
+        };
+    }
+}

@@ -4,64 +4,65 @@
 #include "../handlers/EventHandler.hpp"
 #include "../managers/EntityManager.hpp"
 
-class CameraComponent;
-class ENGINE_API CameraSystem : public System
+namespace engine
 {
-public:
-
-    CameraSystem(EventHandler<CameraSystem, CameraComponent>* eventHandler);
-    virtual void Update() override;
-    virtual void Destroy() override;
-    void Receive(Event* event);
-
-    template<typename ...Params>
-    void RegisterComponent(ComponentType componentType, std::function<CameraComponent*(CameraComponent*, Params...)> constructor)
+    namespace components
     {
-        m_baseConstructors[componentType] = new BaseConstructor<CameraComponent, Params...>(constructor);
+        class CameraComponent;
     }
-
-    template<typename ...Params>
-    void CreateComponent(ComponentType componentType, Params&&... params)
+    namespace systems
     {
-        CameraComponent* newComponent = nullptr;
-        bool isNew = true;
-        for (auto component : m_components)
+        class ENGINE_API CameraSystem : public System
         {
-            if ((component->GetComponentType() == componentType) && !component->IsEnabled())
+        public:
+
+            CameraSystem(handlers::EventHandler<CameraSystem, components::CameraComponent>* eventHandler);
+            virtual void Update() override;
+            virtual void Destroy() override;
+            void Receive(common::Event* event);
+
+            template<typename ...Params>
+            void RegisterComponent(ComponentType componentType, std::function<components::CameraComponent*(components::CameraComponent*, Params...)> constructor)
             {
-                newComponent = component;
-                m_componentLookUp.erase(newComponent->GetEntity());
-                isNew = false;
-                break;
+                m_baseConstructors[componentType] = new common::BaseConstructor<components::CameraComponent, Params...>(constructor);
             }
-        }
-        /*if (m_disabledComponents[componentType].size() > 0)
-        {
-            newComponent = m_disabledComponents[componentType].front();
-            m_disabledComponents[componentType].erase(m_disabledComponents[componentType].begin());
-            m_componentLookUp.erase(newComponent->GetEntity());
-            isNew = false;
-        }*/
-        CameraComponent* component = m_baseConstructors[componentType]->Construct<BaseConstructor<CameraComponent, Params...>>(newComponent, std::forward<Params>(params)...);
-        if (component)
-        {
-            if (isNew)
+
+            template<typename ...Params>
+            void CreateComponent(ComponentType componentType, Params&&... params)
             {
-                m_components.push_back(component);
+                components::CameraComponent* newComponent = nullptr;
+                bool isNew = true;
+                for (auto component : m_components)
+                {
+                    if ((component->GetComponentType() == componentType) && !component->IsEnabled())
+                    {
+                        newComponent = component;
+                        m_componentLookUp.erase(newComponent->GetEntity());
+                        isNew = false;
+                        break;
+                    }
+                }
+                components::CameraComponent* component = m_baseConstructors[componentType]->Construct<common::BaseConstructor<components::CameraComponent, Params...>>(newComponent, std::forward<Params>(params)...);
+                if (component)
+                {
+                    if (isNew)
+                    {
+                        m_components.push_back(component);
+                    }
+                    m_componentLookUp[component->GetEntity()] = component;
+                }
             }
-            m_componentLookUp[component->GetEntity()] = component;
-        }
+
+        protected:
+
+            virtual void DisableComponents(int excludeEntity);
+
+        private:
+
+            std::vector<components::CameraComponent*> m_components;
+            std::unordered_map<managers::EntityManager::Entity, components::CameraComponent*> m_componentLookUp;
+            handlers::EventHandler<CameraSystem, components::CameraComponent>* m_eventHandler;
+            std::unordered_map<ComponentType, common::IBaseConstructor<components::CameraComponent>*> m_baseConstructors;
+        };
     }
-
-protected:
-
-    virtual void DisableComponents(int excludeEntity);
-
-private:
-
-    std::vector<CameraComponent*> m_components;
-    std::unordered_map<ComponentType, std::vector<CameraComponent*>> m_disabledComponents;
-    std::unordered_map<EntityManager::Entity, CameraComponent*> m_componentLookUp;
-    EventHandler<CameraSystem, CameraComponent>* m_eventHandler;
-    std::unordered_map<ComponentType, IBaseConstructor<CameraComponent>*> m_baseConstructors;
-};
+}

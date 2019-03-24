@@ -1,24 +1,27 @@
 #pragma once
 #include <random>
 
-class RandomNumberGenerator
+namespace game
 {
-public:
-
-    RandomNumberGenerator()
+    class RandomNumberGenerator
     {
-        std::random_device rd;
-        std::mt19937 gen(rd());
-    }
+    public:
 
-    static uint16_t GenerateRandomNumber(uint16_t min, uint16_t max)
-    {
-        static RandomNumberGenerator instance;
+        RandomNumberGenerator()
+        {
+            std::random_device rd;
+            std::mt19937 gen(rd());
+        }
 
-        std::uniform_int_distribution<> dis(min, max);
-        return dis(instance.gen);
-    }
+        static uint16_t GenerateRandomNumber(uint16_t min, uint16_t max)
+        {
+            static RandomNumberGenerator instance;
 
-private:
-    std::mt19937 gen;
-};
+            std::uniform_int_distribution<> dis(min, max);
+            return dis(instance.gen);
+        }
+
+    private:
+        std::mt19937 gen;
+    };
+}

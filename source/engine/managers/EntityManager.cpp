@@ -1,8 +1,14 @@
 #include "EntityManager.hpp"
 
-EntityManager::EntityManager() : m_currentId(0) {}
-
-const EntityManager::Entity EntityManager::CreateEntity()
+namespace engine
 {
-    return m_currentId++;
+    namespace managers
+    {
+        EntityManager::EntityManager() : m_currentId(0) {}
+
+        const EntityManager::Entity EntityManager::CreateEntity()
+        {
+            return m_currentId++;
+        }
+    }
 }

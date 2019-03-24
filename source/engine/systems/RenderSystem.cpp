@@ -3,103 +3,91 @@
 #include "../components/RenderComponent.hpp"
 #include "../managers/RenderManager.hpp"
 
-RenderSystem::RenderSystem(EventHandler<RenderSystem, RenderComponent>* eventHandler) : m_eventHandler(eventHandler), System()
+namespace engine
 {
-    m_components.reserve(1000);
-    m_componentLookUp.reserve(1000);
-    //m_disabledComponents.reserve(100);
-}
-
-void RenderSystem::Update()
-{
-    if (m_enabled)
+    namespace systems
     {
-        for (auto component : m_staticComponents)
+        RenderSystem::RenderSystem(handlers::EventHandler<RenderSystem, components::RenderComponent>* eventHandler) : m_eventHandler(eventHandler), System()
         {
-            if (component->IsEnabled())
-            {
-                component->Update();
-            }
+            m_components.reserve(1000);
+            m_componentLookUp.reserve(1000);
         }
-        for (auto component : m_components)
+
+        void RenderSystem::Update()
         {
-            if (component->IsEnabled())
+            if (m_enabled)
             {
-                Event* event = component->Update();
-                if (event)
+                for (auto component : m_staticComponents)
                 {
-                    event->m_entity = component->GetEntity();
-                    Notify(event);
-                    EventPool::AddEvent(event);
-                }
-            }
-            /*if (!component->IsEnabled())
-            {
-                bool isDisabled = false;
-                for (auto disabledComponent : m_disabledComponents[component->GetComponentType()])
-                {
-                    if (disabledComponent->GetEntity() == component->GetEntity())
+                    if (component->IsEnabled())
                     {
-                        isDisabled = true;
-                        break;
+                        component->Update();
                     }
                 }
-                if (!isDisabled)
+                for (auto component : m_components)
                 {
-                    m_disabledComponents[component->GetComponentType()].push_back(component);
+                    if (component->IsEnabled())
+                    {
+                        common::Event* event = component->Update();
+                        if (event)
+                        {
+                            event->m_entity = component->GetEntity();
+                            Notify(event);
+                            common::EventPool::AddEvent(event);
+                        }
+                    }
                 }
-            }*/
+            }
         }
-    }
-}
 
-void RenderSystem::Receive(Event* event)
-{
-    if (m_enabled)
-    {
-        m_eventHandler->HandleEvent(this, m_componentLookUp, event);
-    }
-}
+        void RenderSystem::Receive(common::Event* event)
+        {
+            if (m_enabled)
+            {
+                m_eventHandler->HandleEvent(this, m_componentLookUp, event);
+            }
+        }
 
-void RenderSystem::DisableComponents(int excludeEntity)
-{
-    for (auto component : m_staticComponents)
-    {
-        if ((component->GetEntity() != excludeEntity) && (component->IsEnabled()))
+        void RenderSystem::DisableComponents(int excludeEntity)
         {
-            component->Disable();
-            //m_disabledComponents[component->GetComponentType()].push_back(component);
+            for (auto component : m_staticComponents)
+            {
+                if ((component->GetEntity() != excludeEntity) && (component->IsEnabled()))
+                {
+                    component->Disable();
+                }
+                else
+                {
+                    m_enabled = true;
+                }
+            }
+            for (auto component : m_components)
+            {
+                if ((component->GetEntity() != excludeEntity) && (component->IsEnabled()))
+                {
+                    component->Disable();
+                }
+                else
+                {
+                    m_enabled = true;
+                }
+            }
         }
-        else
-        {
-            m_enabled = true;
-        }
-    }
-    for (auto component : m_components)
-    {
-        if ((component->GetEntity() != excludeEntity) && (component->IsEnabled()))
-        {
-            component->Disable();
-            //m_disabledComponents[component->GetComponentType()].push_back(component);
-        }
-        else
-        {
-            m_enabled = true;
-        }
-    }
-}
 
-void RenderSystem::Destroy()
-{
-    for (auto component : m_components)
-    {
-        component->Destroy();
-        delete component;
+        void RenderSystem::Destroy()
+        {
+            for (auto component : m_components)
+            {
+                component->Destroy();
+                delete component;
+            }
+            managers::RenderManager::DestroyTextures();
+            for (const auto& constructor : m_baseConstructors)
+            {
+                delete constructor.second;
+            }
+            delete m_eventHandler;
+        }
+
     }
-    RenderManager::DestroyTextures();
-    for (const auto& constructor : m_baseConstructors)
-    {
-        delete constructor.second;
-    }
-    delete m_eventHandler;
 }

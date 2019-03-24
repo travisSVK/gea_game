@@ -5,31 +5,40 @@
 #include <vector>
 #include "../common/Enums.hpp"
 
-class Event;
-class ENGINE_API CameraComponent
+namespace engine
 {
-public:
-    CameraComponent() = default;
-    virtual ~CameraComponent() = default;
-    virtual void Create(EntityManager::Entity entity, const glm::dvec2& position, const std::vector<EntityManager::Entity>& excludedEntities);
-    virtual Event* Update() = 0;
-    virtual void Destroy() = 0;
-    virtual void Receive(Event* message);
-    virtual ComponentType GetComponentType() = 0;
-    void SetPosition(glm::dvec2 position);
-    EntityManager::Entity GetEntity();
-    bool IsEnabled();
-    void Enable();
-    void Disable();
+    namespace common
+    {
+        class Event;
+    }
+    namespace components
+    {
+        class ENGINE_API CameraComponent
+        {
+        public:
+            CameraComponent() = default;
+            virtual ~CameraComponent() = default;
+            virtual void Create(managers::EntityManager::Entity entity, const glm::dvec2& position, const std::vector<managers::EntityManager::Entity>& excludedEntities);
+            virtual common::Event* Update() = 0;
+            virtual void Destroy() = 0;
+            virtual void Receive(common::Event* message);
+            virtual ComponentType GetComponentType() = 0;
+            void SetPosition(glm::dvec2 position);
+            managers::EntityManager::Entity GetEntity();
+            bool IsEnabled();
+            void Enable();
+            void Disable();
 
-protected:
+        protected:
 
-    glm::dvec2 m_positionChange;
-    glm::dvec2 m_position;
-    std::vector<EntityManager::Entity> m_excludedEntities;
-    bool m_enabled;
+            glm::dvec2 m_positionChange;
+            glm::dvec2 m_position;
+            std::vector<managers::EntityManager::Entity> m_excludedEntities;
+            bool m_enabled;
 
-private:
-    
-    EntityManager::Entity m_entity;
-};
+        private:
+
+            managers::EntityManager::Entity m_entity;
+        };
+    }
+}

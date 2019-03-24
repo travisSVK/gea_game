@@ -1,12 +1,18 @@
 #include "components/CameraComponent.hpp"
 
-class HorizontalCameraComponent : public CameraComponent
+namespace game
 {
-public:
+    namespace components
+    {
+        class HorizontalCameraComponent : public engine::components::CameraComponent
+        {
+        public:
 
-    virtual void Create(EntityManager::Entity entity, const glm::dvec2& position, const std::vector<EntityManager::Entity>& excludedEntities);
-    virtual Event* Update() override;
-    virtual void Destroy() override;
-    virtual void Receive(Event* message) override;
-    virtual ComponentType GetComponentType() override;
-};
+            virtual void Create(engine::managers::EntityManager::Entity entity, const glm::dvec2& position, const std::vector<engine::managers::EntityManager::Entity>& excludedEntities);
+            virtual engine::common::Event* Update() override;
+            virtual void Destroy() override;
+            virtual void Receive(engine::common::Event* message) override;
+            virtual ComponentType GetComponentType() override;
+        };
+    }
+}

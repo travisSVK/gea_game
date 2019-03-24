@@ -3,16 +3,22 @@
 #include <functional>
 #include "../EngineAPI.hpp"
 
-class Event;
-typedef std::function<void(Event* event)> OnNotifyCallback;
-class ENGINE_API Subject {
+namespace engine
+{
+    namespace common
+    {
+        class Event;
+        typedef std::function<void(Event* event)> OnNotifyCallback;
+        class ENGINE_API Subject {
 
-public:
-    
-    void addObserver(const OnNotifyCallback& observer);
-    void removeObserver(const OnNotifyCallback& observer);
-    void notify(Event* event);
+        public:
 
-private:
-    std::vector<OnNotifyCallback> observers;
-};
+            void addObserver(const OnNotifyCallback& observer);
+            void removeObserver(const OnNotifyCallback& observer);
+            void notify(Event* event);
+
+        private:
+            std::vector<OnNotifyCallback> observers;
+        };
+    }
+}

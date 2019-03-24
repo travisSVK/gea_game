@@ -83,11 +83,11 @@ workspace "GEAEngine"
     -- Copy SDL library to build directory.
     filter { "system:windows" }
         -- SDL
-        os.copyfile("external/SDL/Lib/Win64/SDL2.dll", "Builds/Debug/SDL2.dll")
-        os.copyfile("external/SDL/Lib/Win64/SDL2.dll", "Builds/Release/SDL2.dll")
+        os.copyfile("external/SDL/Lib/Win64/SDL2.dll", "builds/debug/SDL2.dll")
+        os.copyfile("external/SDL/Lib/Win64/SDL2.dll", "builds/release/SDL2.dll")
         -- SDL TTF
-        os.copyfile("external/SDLttf/lib/x64/SDL2_ttf.dll", "Builds/Debug/SDL2_ttf.dll")
-        os.copyfile("external/SDLttf/lib/x64/SDL2_ttf.dll", "Builds/Release/SDL2_ttf.dll")
+        os.copyfile("external/SDLttf/lib/x64/SDL2_ttf.dll", "builds/debug/SDL2_ttf.dll")
+        os.copyfile("external/SDLttf/lib/x64/SDL2_ttf.dll", "builds/release/SDL2_ttf.dll")
         os.copyfile("external/SDLttf/lib/x64/libfreetype-6.dll", "Builds/Debug/libfreetype-6.dll")
         os.copyfile("external/SDLttf/lib/x64/libfreetype-6.dll", "Builds/Release/libfreetype-6.dll")
         os.copyfile("external/SDLttf/lib/x64/zlib1.dll", "Builds/Debug/zlib1.dll")

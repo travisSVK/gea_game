@@ -2,83 +2,71 @@
 #include "../common/Event.hpp"
 #include "../components/CameraComponent.hpp"
 
-CameraSystem::CameraSystem(EventHandler<CameraSystem, CameraComponent>* eventHandler) : m_eventHandler(eventHandler)
+namespace engine
 {
-    m_components.reserve(2);
-    m_componentLookUp.reserve(2);
-}
-
-void CameraSystem::Update()
-{
-    if (m_enabled)
+    namespace systems
     {
-        for (auto component : m_components)
+        CameraSystem::CameraSystem(handlers::EventHandler<CameraSystem, components::CameraComponent>* eventHandler) : m_eventHandler(eventHandler)
         {
-            if (component->IsEnabled())
+            m_components.reserve(2);
+            m_componentLookUp.reserve(2);
+        }
+
+        void CameraSystem::Update()
+        {
+            if (m_enabled)
             {
-                Event* event = component->Update();
-                if (event)
+                for (auto component : m_components)
                 {
-                    event->m_entity = component->GetEntity();
-                    Notify(event);
-                    EventPool::AddEvent(event);
-                    //delete event;
-                }
-            }
-            /*if(!component->IsEnabled())
-            {
-                bool isDisabled = false;
-                for (auto disabledComponent : m_disabledComponents[component->GetComponentType()])
-                {
-                    if (disabledComponent->GetEntity() == component->GetEntity())
+                    if (component->IsEnabled())
                     {
-                        isDisabled = true;
-                        break;
+                        common::Event* event = component->Update();
+                        if (event)
+                        {
+                            event->m_entity = component->GetEntity();
+                            Notify(event);
+                            common::EventPool::AddEvent(event);
+                        }
                     }
                 }
-                if (!isDisabled)
+            }
+        }
+
+        void CameraSystem::Receive(common::Event* event)
+        {
+            if (m_enabled)
+            {
+                m_eventHandler->HandleEvent(this, m_componentLookUp, event);
+            }
+        }
+
+        void CameraSystem::DisableComponents(int excludeEntity)
+        {
+            for (auto component : m_components)
+            {
+                if ((component->GetEntity() != excludeEntity) && (component->IsEnabled()))
                 {
-                    m_disabledComponents[component->GetComponentType()].push_back(component);
+                    component->Disable();
                 }
-            }*/
+                else
+                {
+                    m_enabled = true;
+                }
+            }
         }
-    }
-}
 
-void CameraSystem::Receive(Event* event)
-{
-    if (m_enabled)
-    {
-        m_eventHandler->HandleEvent(this, m_componentLookUp, event);
-    }
-}
-
-void CameraSystem::DisableComponents(int excludeEntity)
-{
-    for (auto component : m_components)
-    {
-        if ((component->GetEntity() != excludeEntity) && (component->IsEnabled()))
+        void CameraSystem::Destroy()
         {
-            component->Disable();
-            //m_disabledComponents[component->GetComponentType()].push_back(component);
+            for (auto component : m_components)
+            {
+                component->Destroy();
+                delete component;
+            }
+            for (const auto& constructor : m_baseConstructors)
+            {
+                delete constructor.second;
+            }
+            delete m_eventHandler;
         }
-        else
-        {
-            m_enabled = true;
-        }
     }
-}
-
-void CameraSystem::Destroy()
-{
-    for (auto component : m_components)
-    {
-        component->Destroy();
-        delete component;
-    }
-    for (const auto& constructor : m_baseConstructors)
-    {
-        delete constructor.second;
-    }
-    delete m_eventHandler;
 }
