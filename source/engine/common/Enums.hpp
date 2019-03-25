@@ -1,3 +1,10 @@
+/**
+ * @file     Enums.hpp
+ * @author   Marek Cernak
+ * @date     3/24/2019
+ *
+ * @brief Game/Engine Enum definitions.
+ */
 #pragma once
 
 enum ComponentType

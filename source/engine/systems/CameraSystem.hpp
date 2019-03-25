@@ -1,3 +1,9 @@
+/**
+ * @file     CameraSystem.hpp
+ * @author   Marek Cernak
+ * @date     3/25/2019
+ */
+
 #pragma once
 #include "../EngineAPI.hpp"
 #include "System.hpp"
@@ -12,6 +18,9 @@ namespace engine
     }
     namespace systems
     {
+        /**
+         * Camera system class used to update register, create and update the camera components.
+         */
         class ENGINE_API CameraSystem : public System
         {
         public:
@@ -19,14 +28,24 @@ namespace engine
             CameraSystem(handlers::EventHandler<CameraSystem, components::CameraComponent>* eventHandler);
             virtual void Update() override;
             virtual void Destroy() override;
-            void Receive(common::Event* event);
+            virtual void Receive(common::Event* event) override;
 
+            /**
+             * Registers subtype of the CameraComponent creation callback.
+             * componentType [in] Type of the component.
+             * constructor [in] Component creation callback to register.
+             */
             template<typename ...Params>
-            void RegisterComponent(ComponentType componentType, std::function<components::CameraComponent*(components::CameraComponent*, Params...)> constructor)
+            void RegisterComponent(ComponentType componentType, const std::function<components::CameraComponent*(components::CameraComponent*, Params...)>& constructor)
             {
                 m_baseConstructors[componentType] = new common::BaseConstructor<components::CameraComponent, Params...>(constructor);
             }
 
+            /**
+             * Creates new CameraComponent and stores it to the container of components to update.
+             * componentType [in] Type of the component (subtype of CameraComponent) to create.
+             * params [in] Parameters to pass to creation callback.
+             */
             template<typename ...Params>
             void CreateComponent(ComponentType componentType, Params&&... params)
             {

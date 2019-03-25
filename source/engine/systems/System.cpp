@@ -1,3 +1,9 @@
+/**
+ * @file     System.cpp
+ * @author   Marek Cernak
+ * @date     3/25/2019
+ */
+
 #include "System.hpp"
 
 namespace engine

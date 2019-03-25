@@ -1,3 +1,9 @@
+/**
+ * @file     MovementSystem.cpp
+ * @author   Marek Cernak
+ * @date     3/25/2019
+ */
+
 #include "MovementSystem.hpp"
 #include "../common/Event.hpp"
 #include "../components/MovementComponent.hpp"

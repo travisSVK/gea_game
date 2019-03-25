@@ -1,3 +1,9 @@
+/**
+ * @file     RenderManager.cpp
+ * @author   Marek Cernak
+ * @date     3/25/2019
+ */
+
 #include "RenderManager.hpp"
 #include "SDL_image.h"
 
@@ -39,17 +45,6 @@ namespace engine
             {
                 SDL_DestroyTexture(texture.second);
             }
-        }
-
-        SDL_Surface* RenderManager::CreateColorSurface(int width, int height)
-        {
-            SDL_Surface* surf = SDL_CreateRGBSurface(0, width, height, 32, 0, 0, 0, 0);
-            if (!surf)
-            {
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Unable to load color! SDL_image Error: %s\n", SDL_GetError());
-                return nullptr;
-            }
-            return surf;
         }
     }
 }

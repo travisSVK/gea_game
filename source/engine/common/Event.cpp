@@ -1,3 +1,10 @@
+/**
+ * @file     Event.cpp
+ * @author   Marek Cernak
+ * @date     3/24/2019
+ *
+ * @brief Events and EventPool definitions.
+ */
 #include "Event.hpp"
 
 namespace engine

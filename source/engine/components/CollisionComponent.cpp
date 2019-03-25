@@ -1,3 +1,9 @@
+/**
+ * @file     CollisionComponent.hpp
+ * @author   Marek Cernak
+ * @date     3/24/2019
+ */
+
 #include "CollisionComponent.hpp"
 
 namespace engine

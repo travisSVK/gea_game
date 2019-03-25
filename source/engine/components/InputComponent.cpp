@@ -1,3 +1,9 @@
+/**
+ * @file     InputComponent.cpp
+ * @author   Marek Cernak
+ * @date     3/24/2019
+ */
+
 #include "InputComponent.hpp"
 #include "../common/Event.hpp"
 #include "../handlers/InputHandler.hpp"

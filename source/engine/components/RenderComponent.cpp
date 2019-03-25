@@ -1,3 +1,9 @@
+/**
+ * @file     RenderComponent.cpp
+ * @author   Marek Cernak
+ * @date     3/24/2019
+ */
+
 #include "RenderComponent.hpp"
 
 namespace engine

@@ -1,3 +1,9 @@
+/**
+ * @file     SpritesheetManager.cpp
+ * @author   Marek Cernak
+ * @date     3/25/2019
+ */
+
 #include "SpritesheetManager.hpp"
 #include "RenderManager.hpp"
 #include "nlohmann/json.hpp"

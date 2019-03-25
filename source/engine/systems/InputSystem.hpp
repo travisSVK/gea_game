@@ -1,3 +1,9 @@
+/**
+ * @file     InputSystem.hpp
+ * @author   Marek Cernak
+ * @date     3/25/2019
+ */
+
 #pragma once
 #include "System.hpp"
 #include "../EngineAPI.hpp"
@@ -12,6 +18,9 @@ namespace engine
     }
     namespace systems
     {
+        /**
+         * Input system class used to update register, create and update the input components.
+         */
         class ENGINE_API InputSystem : public System
         {
         public:
@@ -21,12 +30,22 @@ namespace engine
             virtual void Destroy() override;
             virtual void Receive(common::Event* event) override;
 
+            /**
+             * Registers subtype of the InputComponent creation callback.
+             * componentType [in] Type of the component.
+             * constructor [in] Component creation callback to register.
+             */
             template<typename ...Params>
-            void RegisterComponent(ComponentType componentType, std::function<components::InputComponent*(components::InputComponent*, Params...)> constructor)
+            void RegisterComponent(ComponentType componentType, const std::function<components::InputComponent*(components::InputComponent*, Params...)>& constructor)
             {
                 m_baseConstructors[componentType] = new common::BaseConstructor<components::InputComponent, Params...>(constructor);
             }
 
+            /**
+             * Creates new InputComponent and stores it to the container of components to update.
+             * componentType [in] Type of the component (subtype of InputComponent) to create.
+             * params [in] Parameters to pass to creation callback.
+             */
             template<typename ...Params>
             void CreateComponent(ComponentType componentType, Params&&... params)
             {

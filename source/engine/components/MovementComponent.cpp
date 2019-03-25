@@ -1,3 +1,9 @@
+/**
+ * @file     MovementComponent.cpp
+ * @author   Marek Cernak
+ * @date     3/24/2019
+ */
+
 #include "MovementComponent.hpp"
 #include <vector>
 

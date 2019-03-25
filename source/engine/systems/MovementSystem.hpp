@@ -1,3 +1,9 @@
+/**
+ * @file     MovementSystem.hpp
+ * @author   Marek Cernak
+ * @date     3/25/2019
+ */
+
 #pragma once
 #include "System.hpp"
 #include "../handlers/EventHandler.hpp"
@@ -11,6 +17,9 @@ namespace engine
     }
     namespace systems
     {
+        /**
+         * Movement system class used to update register, create and update the movement components.
+         */
         class ENGINE_API MovementSystem : public System
         {
         public:
@@ -20,12 +29,22 @@ namespace engine
             virtual void Destroy() override;
             void Receive(common::Event* event);
 
+            /**
+             * Registers subtype of the MovementComponent creation callback.
+             * componentType [in] Type of the component.
+             * constructor [in] Component creation callback to register.
+             */
             template<typename ...Params>
-            void RegisterComponent(ComponentType componentType, std::function<components::MovementComponent*(components::MovementComponent*, Params...)> constructor)
+            void RegisterComponent(ComponentType componentType, const std::function<components::MovementComponent*(components::MovementComponent*, Params...)>& constructor)
             {
                 m_baseConstructors[componentType] = new common::BaseConstructor<components::MovementComponent, Params...>(constructor);
             }
 
+            /**
+             * Creates new MovementComponent and stores it to the container of components to update.
+             * componentType [in] Type of the component (subtype of MovementComponent) to create.
+             * params [in] Parameters to pass to creation callback.
+             */
             template<typename ...Params>
             void CreateComponent(ComponentType componentType, Params&&... params)
             {

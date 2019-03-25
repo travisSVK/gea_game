@@ -1,3 +1,9 @@
+/**
+ * @file     CollisionSystem.cpp
+ * @author   Marek Cernak
+ * @date     3/25/2019
+ */
+
 #include "CollisionSystem.hpp"
 #include "../common/Event.hpp"
 #include "../components/CollisionComponent.hpp"

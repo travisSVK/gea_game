@@ -1,3 +1,11 @@
+/**
+ * @file     Event.hpp
+ * @author   Marek Cernak
+ * @date     3/24/2019
+ *
+ * @brief Events and EventPool declarations.
+ */
+
 #pragma once
 #include "../managers/EntityManager.hpp"
 #include "SDL.h"
@@ -10,9 +18,16 @@ namespace engine
 {
     namespace common
     {
+        /**
+         * Base class for events.
+         */
         class ENGINE_API Event
         {
         public:
+            /**
+            * Casts Event class to a type T - derived Event type.
+            * @return pointer to the Event of type T.
+            */
             template<typename T>
             T* GetMessage()
             {
@@ -22,11 +37,28 @@ namespace engine
             MessageType m_type;
         };
 
+        /**
+         * Pool of unused events.
+         */
         class ENGINE_API EventPool
         {
         public:
+            /**
+            * Returns event of a specific type if any available.
+            * type [in] Type of the event to retrieve from the pool.
+            * @return pointer to the Event.
+            */
             static Event* GetEvent(MessageType type);
+            
+            /**
+            * Adds an event to the pool.
+            * event [in/out] Event to be added to the pool.
+            */
             static void AddEvent(Event* event);
+
+            /**
+            * Destroys all events in the pool.
+            */
             static void DestroyEvents();
 
         private:

@@ -1,3 +1,9 @@
+/**
+ * @file     RenderSystem.hpp
+ * @author   Marek Cernak
+ * @date     3/25/2019
+ */
+
 #pragma once
 #include "System.hpp"
 #include "../handlers/EventHandler.hpp"
@@ -11,6 +17,9 @@ namespace engine
     }
     namespace systems
     {
+        /**
+         * Render system class used to update register, create and update the render components.
+         */
         class ENGINE_API RenderSystem : public System
         {
         public:
@@ -20,12 +29,22 @@ namespace engine
             virtual void Destroy() override;
             void Receive(common::Event* event);
 
+            /**
+             * Registers subtype of the RenderComponent creation callback.
+             * componentType [in] Type of the component.
+             * constructor [in] Component creation callback to register.
+             */
             template<typename ...Params>
-            void RegisterComponent(ComponentType componentType, std::function<components::RenderComponent*(components::RenderComponent*, Params...)> constructor)
+            void RegisterComponent(ComponentType componentType, const std::function<components::RenderComponent*(components::RenderComponent*, Params...)>& constructor)
             {
                 m_baseConstructors[componentType] = new common::BaseConstructor<components::RenderComponent, Params...>(constructor);
             }
 
+            /**
+             * Creates new RenderComponent and stores it to the container of components to update.
+             * componentType [in] Type of the component (subtype of RenderComponent) to create.
+             * params [in] Parameters to pass to creation callback.
+             */
             template<typename ...Params>
             void CreateComponent(ComponentType componentType, Params&&... params)
             {

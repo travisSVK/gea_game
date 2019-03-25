@@ -1,3 +1,9 @@
+/**
+ * @file     CameraSystem.cpp
+ * @author   Marek Cernak
+ * @date     3/25/2019
+ */
+
 #include "CameraSystem.hpp"
 #include "../common/Event.hpp"
 #include "../components/CameraComponent.hpp"

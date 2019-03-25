@@ -1,3 +1,9 @@
+/**
+ * @file     CameraComponent.cpp
+ * @author   Marek Cernak
+ * @date     3/24/2019
+ */
+
 #include "CameraComponent.hpp"
 #include "../common/Event.hpp"
 #include <algorithm>
@@ -28,7 +34,7 @@ namespace engine
             }
         }
 
-        void CameraComponent::SetPosition(glm::dvec2 position)
+        void CameraComponent::SetPosition(const glm::dvec2& position)
         {
             m_positionChange = position;
             m_position += position;

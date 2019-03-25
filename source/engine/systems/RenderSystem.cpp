@@ -1,3 +1,9 @@
+/**
+ * @file     RenderSystem.cpp
+ * @author   Marek Cernak
+ * @date     3/25/2019
+ */
+
 #include "RenderSystem.hpp"
 #include "../common/Event.hpp"
 #include "../components/RenderComponent.hpp"

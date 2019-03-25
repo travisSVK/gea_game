@@ -1,3 +1,11 @@
+/**
+ * @file     Subject.cpp
+ * @author   Marek Cernak
+ * @date     3/24/2019
+ *
+ * @brief Subject definition.
+ */
+
 #include <algorithm>
 #include "Subject.hpp"
 #include "Event.hpp"
