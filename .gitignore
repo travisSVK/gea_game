@@ -27,12 +27,8 @@
 !*.travis.yml
 
 # Allow data
-#!source/game/data/
-#!source/game/data/*
-#!source/game/data/graphics/
-#!source/game/data/graphics/*
-#!source/game/data/sfx/
-#!source/game/data/music/*
+!source/game/data/
+!source/game/data/*
 
 # Exclude external libs
-external/
+#external/
