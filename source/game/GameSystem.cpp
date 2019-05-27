@@ -62,7 +62,7 @@ namespace game
         }
 
         //Create window
-        m_window = SDL_CreateWindow("Elevator Action", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN);
+        m_window = SDL_CreateWindow("EA", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_SHOWN);
         if (m_window == NULL)
         {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Window could not be created! SDL_Error: %s\n", SDL_GetError());
