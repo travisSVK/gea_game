@@ -1,0 +1,29 @@
+{
+    "path": "data/sprite/projectile/",
+    "sprites": [
+    {
+        "path": "projectile.png",
+        "width": 20,
+        "height": 5,
+        "typeId": 0
+    },
+    {
+        "path": "projectile.png",
+        "width": 20,
+        "height": 5,
+        "typeId": 1
+    },
+    {
+        "path": "destroyed_left.png",
+        "width": 20,
+        "height": 20,
+        "typeId": 5
+    },
+    {
+        "path": "destroyed_right.png",
+        "width": 20,
+        "height": 20,
+        "typeId": 6
+    }
+    ]
+}

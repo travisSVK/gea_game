@@ -1,0 +1,17 @@
+{
+    "path": "data/sprite/car/",
+    "sprites": [
+    {
+        "path": "car_empty.png",
+        "width": 45,
+        "height": 30,
+        "typeId": 1
+    },
+    {
+        "path": "car_occupied.png",
+        "width": 45,
+        "height": 30,
+        "typeId": 11
+    }
+    ]
+}

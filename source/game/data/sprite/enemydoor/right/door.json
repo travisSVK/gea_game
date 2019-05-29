@@ -1,0 +1,63 @@
+{
+    "path": "data/sprite/enemydoor/right/",
+    "spriteSheets": [
+    {
+        "paths": [
+        {
+            "path": "opening/1.png",
+            "width": 30,
+            "height": 50
+        },
+        {
+            "path": "opening/2.png",
+            "width": 30,
+            "height": 50
+        },
+        {
+            "path": "opening/3.png",
+            "width": 30,
+            "height": 50
+        },
+        {
+            "path": "opening/4.png",
+            "width": 30,
+            "height": 50
+        }
+        ],
+        "typeId": 1
+    },
+    {
+        "paths": [
+        {
+            "path": "closing/1.png",
+            "width": 30,
+            "height": 50
+        },
+        {
+            "path": "closing/2.png",
+            "width": 30,
+            "height": 50
+        },
+        {
+            "path": "closing/3.png",
+            "width": 30,
+            "height": 50
+        },
+        {
+            "path": "closing/4.png",
+            "width": 30,
+            "height": 50
+        }
+        ],
+        "typeId": 2
+    }
+    ],
+    "sprites": [
+    {
+        "path": "closed.png",
+        "width": 30,
+        "height": 50,
+        "typeId": 0
+    }
+    ]
+}

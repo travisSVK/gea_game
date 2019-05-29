@@ -1,0 +1,89 @@
+{
+    "path": "data/sprite/enemy/",
+    "spriteSheets": [
+    {
+        "paths": [
+        {
+            "path": "left_move/1.png",
+            "width": 20,
+            "height": 40
+        },
+        {
+            "path": "left_move/2.png",
+            "width": 20,
+            "height": 40
+        }
+        ],
+        "typeId": 0
+    },
+    {
+        "paths": [
+        {
+            "path": "right_move/1.png",
+            "width": 20,
+            "height": 40
+        },
+        {
+            "path": "right_move/2.png",
+            "width": 20,
+            "height": 40
+        }
+        ],
+        "typeId": 1
+    },
+    {
+        "paths": [
+        {
+            "path": "destroyed_left/1.png",
+            "width": 20,
+            "height": 40
+        },
+        {
+            "path": "destroyed_left/2.png",
+            "width": 30,
+            "height": 20
+        },
+        {
+            "path": "destroyed.png",
+            "width": 30,
+            "height": 30
+        }
+        ],
+        "typeId": 5
+    },
+    {
+        "paths": [
+        {
+            "path": "destroyed_right/1.png",
+            "width": 20,
+            "height": 40
+        },
+        {
+            "path": "destroyed_right/2.png",
+            "width": 30,
+            "height": 20
+        },
+        {
+            "path": "destroyed.png",
+            "width": 30,
+            "height": 30
+        }
+        ],
+        "typeId": 6
+    }
+    ],
+    "sprites": [
+    {
+        "path": "left_stand.png",
+        "width": 20,
+        "height": 40,
+        "typeId": 3
+    },
+    {
+        "path": "right_stand.png",
+        "width": 20,
+        "height": 40,
+        "typeId": 2
+    }
+    ]
+}
